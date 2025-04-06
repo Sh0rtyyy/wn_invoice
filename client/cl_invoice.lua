@@ -6,6 +6,8 @@ end)
 -- id = referencial ID of invoice, for command deletation
 -- identifier = user that needs to pay identifier
 -- source_identifier = user that gave invoice
+-- name = user name that needs to pay identifier
+-- source_name = user name that gave invoice
 -- reason = why to pay
 -- amount = amount to pay
 -- job = Job that gave the invoice
@@ -14,21 +16,28 @@ end)
 -- payed_date = when was bill payed
 -- status = payed or notpayed
 
-local function OpenInvoiceMenu() 
+local function OpenInvoiceMenu()
     local invoices = lib.callback.await('wn_invoice:requestInvoices', false)
+    local status = "green"
     local options = {}
 
     for _, data in ipairs(invoices) do
+        if data.status == "unpaid" then
+            status = "red"
+        end
         table.insert(options, {
             title = "Invoice #" .. data.id .. " - $" .. data.amount,
             description = data.status,
             icon = 'file-invoice',
-            iconColor = 'orange',
-            colorScheme = 'yellow',
+            colorScheme = status,
+            progress = 100,
             onSelect = function()
                 -- Optional: Handle selection, like showing full details or pay option
-                OpenInvoice(data)
                 print("Selected invoice ID: " .. data.id)
+                local payed = OpenInvoice(data)
+                if payed then
+                    lib.callback.await('wn_invoice:invoicePayed', false, data.id)
+                end
             end
         })
     end
@@ -45,14 +54,20 @@ local function OpenInvoiceMenu()
 end
 
 local function OpenInvoice(data)
+    local desc = data.reson .. "  \n  " .. data.source_name
+    if data.job ~= nil then
+        desc = data.reson .. "  \n  " .. data.job .. "  \n  " .. data.source_name
+    end
 
-    lib.alertDialog({
+    local payed = lib.alertDialog({
         header = "Invoice #" .. data.id .. " - $" .. data.amount,,
-        content = data.reason,
+        content = desc,
         centered = true,
         labels = {
             confirm = "Pay"
         }
-        cancel = false
+        cancel = true
     })
+
+    return payed
 end
