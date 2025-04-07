@@ -1,4 +1,3 @@
-
 RegisterCommand(Config.CreateInvoiceCommand, function()
     OpenCreateInvoiceMenu()
 end)

@@ -198,6 +198,8 @@ end
 
 function table.contains(table, value)
     for _, v in ipairs(table) do
+        print("v", v)
+        print("value", value)
         if v == value then
             return true
         end
