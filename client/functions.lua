@@ -1,5 +1,5 @@
 local PlayerData = {}
-local PlayerJob
+local PlayerJob = nil
 local CurrentShopBlips = {}
 lib.locale()
 
@@ -105,6 +105,28 @@ function GetJob()
     end
 end
 
+function GetJobGrade()
+    if Config.Framework == "ESX" then
+        if ESX.GetPlayerData().job then
+            return ESX.GetPlayerData().job.grade
+        else
+            return false
+        end
+    elseif Config.Framework == "qbcore" then
+        if QBCore.Functions.GetPlayerData().job then
+            return QBCore.Functions.GetPlayerData().job.grade
+        else
+            return false
+        end
+    elseif Config.Framework == "qbox" then
+        if QBX.PlayerData.job then
+            return QBX.PlayerData.job.grade
+        else
+            return false
+        end
+    end
+end
+
 function Dispatch(coords)
     if Config.Dispatch == "cd_dispatch" then
         local data = exports['cd_dispatch']:GetPlayerInfo()
@@ -172,4 +194,13 @@ function Dispatch(coords)
              }
         })
     end
+end
+
+function table.contains(table, value)
+    for _, v in ipairs(table) do
+        if v == value then
+            return true
+        end
+    end
+    return false
 end

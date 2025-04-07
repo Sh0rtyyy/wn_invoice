@@ -1,6 +1,5 @@
 Config = {}
 
-
 Config.Locale = 'en'
 Config.Framework = "ESX" -- ESX or qbcore
 Config.EnableDebug = true -- Enable/Disable prints and showing box of ox_target

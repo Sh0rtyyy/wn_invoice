@@ -1,5 +1,47 @@
 RegisterCommand(Config.InvoiceCommand, function()
-    OpenInvoiceMenu()
+    local job = GetJob()
+    local grade = GetJobGrade()
+    local option = {
+        {
+            title = "Open your invoices",
+            description = "View and issue available invoices",
+            icon = 'star',
+            onSelect = function()
+                OpenInvoiceMenu()
+            end
+        },
+    }
+
+    -- Check if unemployed invoices are allowed or if the job/grade combination has invoices available
+    if Config.UnemployedInvoices or (Config.JobInvoices[job].data.grades == job and (Config.JobInvoices[job].data.grades == "all" or table.contains(Config.JobInvoices[job].data.grades, grade))) then
+        option = {
+            {
+                title = "Open your invoices",
+                description = "View and issue available invoices",
+                icon = 'star',
+                onSelect = function()
+                    OpenInvoiceMenu()
+                end
+            },
+            {
+                title = "Create invoice",
+                description = "Create invoice",
+                icon = 'star',
+                onSelect = function()
+                    OpenCreateInvoiceMenu()
+                end
+            },
+        }
+    end
+
+    lib.registerContext({
+        id = 'invoicemenu',
+        title = "Invoice Menu",
+        canClose = true,
+        options = option
+    })
+
+    lib.showContext('invoicemenu')
 end)
 
 -- DB TABLUKA STRUCTURE
