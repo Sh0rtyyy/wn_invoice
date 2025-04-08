@@ -5,7 +5,7 @@ Config.Framework = "ESX" -- ESX or qbcore
 Config.EnableDebug = true -- Enable/Disable prints and showing box of ox_target
 Config.PoliceJobs =  {"police", "sheriff"} -- Name of the job for script
 Config.Notify = "ox_lib" -- ox_lib, qbcore or ESX
-Config.SearchDuration = 6000 -- How long will the player search the pleace
+Config.SearchDuration = 6000 -- How long will the player search the pleace.
 
 Config.InvoiceCommand = "invoice"
 Config.InvoiceKeyBind = "F5" -- or false3
