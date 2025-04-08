@@ -196,6 +196,85 @@ function Dispatch(coords)
     end
 end
 
+function SelectPlayer(returnmenu)
+    local choosenPlayer = nil
+    local players = GetActivePlayers()
+    local pedCoords = GetEntityCoords(PlayerPedId())
+    local closePlayers = {}
+    local title = "Vyber hráče"
+    if newTitle then
+        title = newTitle
+    end
+    for k, v in pairs(players) do
+        if v ~= PlayerId() then -- Check if v is not the same as the local player's ID
+            local dist = #(GetEntityCoords(GetPlayerPed(v)) - pedCoords)
+            if dist < 4 and dist > -1 then
+                table.insert(closePlayers, {label = 'Hráč č. '..k, args = {id = v}})
+            end
+        end
+    end
+	if not closePlayers[1] then 
+        lib.notify({
+            title = 'Inventář',
+            description = 'Nikdo není poblíž',
+            icon = 'fa-solid fa-hand-holding-hand',
+            duration = 5000,
+            type = 'error'
+        })
+    return nil end
+
+    local currentlyHoveredPlayer = closePlayers[1].args.id
+
+
+    local id = math.random(1, 99999)
+    lib.registerMenu({
+        id = 'chose_player'..id,
+        title = title,
+        position = 'top-right',
+        onSideScroll = function(selected, scrollIndex, args)
+            currentlyHoveredPlayer = args.id
+        end,
+        onSelected = function(selected, scrollIndex, args)
+            currentlyHoveredPlayer = args.id
+        end,
+        onClose = function()
+            choosenPlayer = false
+        end,
+        options = closePlayers
+    }, function(selected, scrollIndex, args)
+        choosenPlayer = args.id
+    end)
+
+    lib.showMenu('chose_player'..id)
+    Citizen.CreateThread(function()
+        while true do
+            Wait(0)
+            DrawMarker(21, GetEntityCoords(GetPlayerPed(currentlyHoveredPlayer)) + vector3(0.0, 0.0, 1.0), 0.0, 0.0, 0.0, 180.0, 0.0, 0.0, 0.3, 0.3, 0.3, 255,255,255, 100, false, false, 2, true, false, false, false)
+            if choosenPlayer ~= nil then return end
+        end
+    end)
+    while choosenPlayer == nil do
+        Wait(500)
+    end
+    if returnmenu ~= nil then
+        lib.showContext(returnmenu)
+    end
+    return choosenPlayer
+end
+
+function giveInput(dialog_name, title, rownames, default, type, returnmenu)
+    local input = lib.inputDialog(dialog_name, {
+        {type = type, label = title, description = rownames, default = default, format = "DD/MM/YYYY"},
+    })
+ 
+    if not input then return end
+    print(json.encode(input[1]))
+    if returnmenu ~= nil then
+        lib.showContext(returnmenu)
+    end
+    return input[1]
+end
+
 function table.contains(table, value)
     for _, v in ipairs(table) do
         print("v", v)

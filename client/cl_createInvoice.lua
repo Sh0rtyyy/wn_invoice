@@ -16,23 +16,70 @@ end)
 -- payed_date = when was bill payed
 -- status = payed or notpayed
 
-local function OpenCreateInvoiceMenu()
+function OpenCreateInvoiceMenu()
+    local data = {}
+
     lib.registerContext({
         id = 'createinvoice',
         title = "Create invoice",
         canClose = true,
         options = {
             {
-                title = locale('reputation'),
-                description = locale('reputation_d', xp),
-                icon = 'star',
-                readOnly = true,
-                iconColor = 'yellow',
-                colorScheme = 'lime',
-                progress = xp,
+                title = "Select player",
+                description = "Select player which you want create bill to",
+                onSelect = function()
+                    local player = SelectPlayer('createinvoice')
+                    data.player = player
+                end
+            },
+            {
+                title = "Reason",
+                description = "Why is bill given",
+                onSelect = function()
+                    local reason = giveInput('Create Invoice', 'Set Reason Of Invoice', {'Set Reason'}, nil, 'input', 'createinvoice')
+                    data.reason = reason
+                end
+            },
+            {
+                title = "Amount",
+                description = "Amount of the bill",
+                onSelect = function()
+                    local amount = giveInput('Create Invoice', 'Set Price Of Invoice', {'Set Price'}, 0, 'number', 'createinvoice')
+                    data.amount = amount
+                end
+            },
+            {
+                title = "As Job",
+                description = "Give Invoice as job",
+                onSelect = function()
+                    local job = giveInput('Create Invoice', 'Set Job Of Invoice', {'Set Job'}, nil, 'checkbox', 'createinvoice')
+                    data.job = job
+                end
+            },
+            {
+                title = "Set Date",
+                description = "Set Date",
+                onSelect = function()
+                    local date_to_pay = giveInput('Create Invoice', 'Set Date Of Invoice', {'Set Date'}, true, 'date', 'createinvoice')
+                    data.date_to_pay = date_to_pay
+                end
+            },
+            {
+                title = "Send Invoice",
+                description = "Send Invoice",
+                onSelect = function()
+                    if not data.player or not data.reason or not data.amount or not data.job or not data.date_to_pay then
+                        -- Notify user that they need to fill all fields
+                        print("Please fill all fields before sending the invoice.")
+                    else
+                        -- Proceed to send the invoice if all fields are filled
+                        print(json.encode(data))
+                        lib.callback.await('wn_invoice:invoicePayed', false, data)
+                    end
+                end
             },
         }
     })
     
-    lib.showContext('acceptPayment')
+    lib.showContext('createinvoice')
 end

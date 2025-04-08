@@ -79,7 +79,7 @@ function OpenPreInvoiceMenu()
                 colorScheme = "green",
                 icon = 'star',
                 onSelect = function()
-                    OpenInvoiceMenu(invoices, "paid")
+                    OpenInvoiceMenu(invoices, "payed")
                 end
             },
             {
@@ -102,15 +102,19 @@ function OpenInvoiceMenu(data, invoice_status)
     local invoices = data
     local invoice_status = invoice_status
     local status = "green"
+    local context_title = "Paid Invoices"
     local options = {}
 
     for _, data in ipairs(invoices) do
-        if not data.status == invoice_status then return end
+        print("invoice_status", invoice_status)
+        print("data.status", data.status)
+        if invoice_status ~= data.status then print("Not right status") return end
         if data.status == "unpaid" then
             status = "red"
+            context_title = "Unpaid Invoices"
         end
         table.insert(options, {
-            title = "Invoice #" .. data.id .. " - " .. data.amount .. "$",
+            title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Due by " .. data.date_to_pay,
             description = string.upper(data.status),
             icon = 'file-invoice',
             colorScheme = status,
@@ -118,7 +122,8 @@ function OpenInvoiceMenu(data, invoice_status)
             onSelect = function()
                 -- Optional: Handle selection, like showing full details or pay option
                 print("Selected invoice ID: " .. data.id)
-                local payed = OpenInvoice(data)
+                local payed = OpenInvoice(data, data.status)
+                if payed == nil then OpenPreInvoiceMenu() end
                 print("payed", payed)
                 if payed == "confirm" then
                     print("Invoice payed", data.id)
@@ -131,29 +136,45 @@ function OpenInvoiceMenu(data, invoice_status)
     -- Register and show the context menu
     lib.registerContext({
         id = 'invoices_menu',
-        title = "Your Invoices",
+        title = context_title,
         canClose = true,
+        menu = 'preinvoicemenu',
+        onBack = function()
+            print('Went back!')
+        end,
         options = options
     })
 
     lib.showContext('invoices_menu')
 end
 
-function OpenInvoice(data)
+function OpenInvoice(data, status)
+    local payed = false
     local desc = "Invoice desc:  \n  " .. data.reason .. "  \n  " .. "  \n  Issued by: " .. data.source_name
     if data.job ~= nil then
         desc = "Invoice desc:  \n  " .. data.reason .. "  \n  " .. "  \n  Issued by: " .. data.job .. "  \n  " .. data.source_name
     end
 
-    local payed = lib.alertDialog({
-        header = "Invoice #" .. data.id .. " - $" .. data.amount,
-        content = desc,
-        centered = true,
-        labels = {
-            confirm = "Pay"
-        },
-        cancel = true
-    })
+    if status == "payed" then
+        lib.alertDialog({
+            header = "Invoice #" .. data.id .. " - $" .. data.amount,
+            content = desc,
+            centered = true,
+            cancel = false
+        })
+    else
+        payed = lib.alertDialog({
+            header = "Invoice #" .. data.id .. " - $" .. data.amount,
+            content = desc,
+            centered = true,
+            labels = {
+                confirm = "Pay"
+            },
+            cancel = true
+        })
+        print("payed", payed)
+    end
 
+    print("payed 2", payed)
     return payed
 end

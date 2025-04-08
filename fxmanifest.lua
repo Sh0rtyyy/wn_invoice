@@ -5,8 +5,6 @@ author 'mrshortyno'
 description 'A methlab script for ESX and QB-Core'
 version '1.0.0'
 lua54 'yes'
-this_is_a_map 'yes'
-
 
 client_scripts {
     'client/*.lua',

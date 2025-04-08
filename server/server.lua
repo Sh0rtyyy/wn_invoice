@@ -42,11 +42,11 @@ lib.callback.register('wn_invoice:invoicePayed', function(id)
         Wait(10)
     end
 
-    local user_money = GetMoney("bank", invoiceData.amount, src)
-
     print("user_money", user_money)
     print("invoiceData.amount", invoiceData.amount)
-    if not user_money >= invoiceData.amount then print("Not enough money") return end
+
+    local user_money = GetMoney("bank", invoiceData.amount, src)
+    if not user_money then print("Not enough money") return end
 
     if invoiceData then
         MySQL.Async.execute('UPDATE wn_invoice SET status = @status WHERE identifier = @identifier AND id = @invoice_id', {
@@ -64,4 +64,12 @@ lib.callback.register('wn_invoice:invoicePayed', function(id)
     else
         print('Invoice not found for player ' .. playerIdentifier .. ' with ID ' .. invoice_id)
     end
+end)
+
+lib.callback.register('wn_invoice:createInvoice', function(data)
+    local src = source
+    local playerIdentifier = GetIdentifier(src)
+    local timestamp = math.floor(date.date_to_pay / 1000)
+    local date_to_pay = os.date('%Y-%m-%d %H:%M:%S', timestamp)
+
 end)
