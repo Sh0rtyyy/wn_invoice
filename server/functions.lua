@@ -204,6 +204,28 @@ function AddMoney(type, count, source)
     end
 end
 
+function RemoveMoney(type, count, source)
+    local src = source
+    local moneyType = type
+    local moneyAmount = count
+
+    if Config.Framework == "ESX" then
+        local xPlayer = ESX.GetPlayerFromId(src)
+        xPlayer.removeAccountMoney(moneyType, moneyAmount)
+    elseif Config.Framework == "qbcore" then
+        local xPlayer = QBCore.Functions.GetPlayer(src)
+        if moneyType == "money" then
+            moneyType = "cash"
+        end
+        xPlayer.Functions.RemoveMoney(moneyType, moneyAmount)
+    elseif Config.Framework == "qbox" then
+        if moneyType == "money" then
+            moneyType = "cash"
+        end
+        exports.qbx_core:RemoveMoney(src, moneyType, moneyAmount)
+    end
+end
+
 function GetMoney(type, count, source)
     local src = source
     local moneyType = type

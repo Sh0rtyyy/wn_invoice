@@ -2,7 +2,7 @@ RegisterCommand(Config.InvoiceCommand, function()
     local job = GetJob()
     local grade = GetJobGrade()
     print(job .. " " .. grade)
-    
+
     local option = {
         {
             title = "Open your invoices",
@@ -16,7 +16,7 @@ RegisterCommand(Config.InvoiceCommand, function()
 
     if Config.UnemployedInvoices or (Config.JobInvoices[job] and Config.JobInvoices[job].data.job == job) then
         local jobName = Config.JobInvoices[job].data.job
-        print(jobName)  -- This will print the job associated with that entry
+        print(jobName)
         option = {
             {
                 title = "Open your invoices",
@@ -67,9 +67,8 @@ function OpenPreInvoiceMenu()
     local invoices = lib.callback.await('wn_invoice:requestInvoices', false)
     print(json.encode(invoices))
 
-    -- Correctly defining the options for the Pre Invoice Menu
     lib.registerContext({
-        id = 'zdar',
+        id = 'preinvoicemenu',
         title = "Invoice Menu",
         canClose = true,
         options = {
@@ -95,9 +94,8 @@ function OpenPreInvoiceMenu()
             }
         }
     })
-    
-    -- Show the context menu for Pre Invoice Menu
-    lib.showContext('zdar')
+
+    lib.showContext('preinvoicemenu')
 end
 
 function OpenInvoiceMenu(data, invoice_status)
