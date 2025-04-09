@@ -53,6 +53,22 @@ function GetIdentifier(source)
     end
 end
 
+function GetName(source)
+    local src = source
+
+    -- TODO: Zkontrolovať
+    if Config.Framework == "ESX" then
+        local xPlayer = ESX.GetPlayerFromId(src)
+        return xPlayer.getName()
+    elseif Config.Framework == "qbcore" then
+        local xPlayer = QBCore.Functions.GetIdentifier(src)
+        return xPlayer.PlayerData.firstname .. " " .. xPlayer.PlayerData.lastname
+    elseif Config.Framework == "qbox" then
+        local xPlayer = exports.qbx_core:GetPlayer(src)
+        return xPlayer.PlayerData.firstname .. " " .. xPlayer.PlayerData.lastname
+    end
+end
+
 function GetCops()
     local cops = 0
 

@@ -29,8 +29,9 @@ function OpenCreateInvoiceMenu()
                 title = "Select player",
                 description = "Select player which you want create bill to",
                 onSelect = function()
-                    local player = SelectPlayer('createinvoice')
-                    data.player = player
+                    local reiidkason = giveInput('Create Invoice', 'Set Reason Of Invoice', {'Set Reason'}, nil, 'input', 'createinvoice')
+                    --local player = SelectPlayer('createinvoice')
+                    data.player = "1"
                 end
             },
             {
@@ -69,13 +70,18 @@ function OpenCreateInvoiceMenu()
                 title = "Send Invoice",
                 description = "Send Invoice",
                 onSelect = function()
-                    if not data.player or not data.reason or not data.amount or not data.job or not data.date_to_pay then
+                    --if not data.player or not data.reason or not data.amount or not data.job or not data.date_to_pay then
+                    print("data.player", data.player)
+                    print(json.encode(data))
+                    if not data.reason or not data.amount or not (data.job ~= nil) or not data.date_to_pay then
+
                         -- Notify user that they need to fill all fields
                         print("Please fill all fields before sending the invoice.")
                     else
                         -- Proceed to send the invoice if all fields are filled
                         print(json.encode(data))
-                        lib.callback.await('wn_invoice:invoicePayed', false, data)
+                        TriggerServerEvent('wn_invoice:createInvoice', data)
+                        --lib.callback.await('wn_invoice:createInvoice', false, data)
                     end
                 end
             },

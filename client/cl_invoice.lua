@@ -108,29 +108,32 @@ function OpenInvoiceMenu(data, invoice_status)
     for _, data in ipairs(invoices) do
         print("invoice_status", invoice_status)
         print("data.status", data.status)
-        if invoice_status ~= data.status then print("Not right status") return end
-        if data.status == "unpaid" then
-            status = "red"
-            context_title = "Unpaid Invoices"
-        end
-        table.insert(options, {
-            title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Due by " .. data.date_to_pay,
-            description = string.upper(data.status),
-            icon = 'file-invoice',
-            colorScheme = status,
-            progress = 100,
-            onSelect = function()
-                -- Optional: Handle selection, like showing full details or pay option
-                print("Selected invoice ID: " .. data.id)
-                local payed = OpenInvoice(data, data.status)
-                if payed == nil then OpenPreInvoiceMenu() end
-                print("payed", payed)
-                if payed == "confirm" then
-                    print("Invoice payed", data.id)
-                    lib.callback.await('wn_invoice:invoicePayed', false, data.id)
-                end
+        if invoice_status == data.status then
+            print("Shown invoice ", invoice_status, data.status)
+            if data.status == "unpaid" then
+                status = "red"
+                context_title = "Unpaid Invoices"
             end
-        })
+            table.insert(options, {
+                title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Due by " .. data.date_to_pay,
+                description = string.upper(data.status),
+                icon = 'file-invoice',
+                colorScheme = status,
+                progress = 100,
+                onSelect = function()
+                    -- Optional: Handle selection, like showing full details or pay option
+                    print("Selected invoice ID: " .. data.id)
+                    local payed = OpenInvoice(data, data.status)
+                    if payed == nil then OpenPreInvoiceMenu() end
+                    print("payed", payed)
+                    if payed == "confirm" then
+                        print("Invoice payed", data.id)
+                        TriggerServerEvent('wn_invoice:invoicePayed', data.id)
+                        --lib.callback.await('wn_invoice:invoicePayed', false, data.id)
+                    end
+                end
+            })
+        end
     end
 
     -- Register and show the context menu
