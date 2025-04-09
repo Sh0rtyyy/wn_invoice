@@ -20,6 +20,50 @@ lib.callback.register('wn_invoice:requestInvoices', function()
     return invoiceData
 end)
 
+RegisterNetEvent('wn_invoice:requestInvoices', function(src)
+    local request_source = src
+    local playerIdentifier = GetIdentifier(request_source)
+    local invoiceData = {}
+    local isFetched = false
+
+    MySQL.Async.fetchAll('SELECT * FROM wn_invoice WHERE identifier = @identifier', {
+        ['@identifier'] = playerIdentifier
+    }, function(result)
+        if result then
+            invoiceData = result
+        end
+        isFetched = true
+    end)
+
+    while not isFetched do
+        Wait(10)
+    end
+
+    return invoiceData
+end)
+
+exports('requestInvoices', function(src)
+    local request_source = src
+    local playerIdentifier = GetIdentifier(request_source)
+    local invoiceData = {}
+    local isFetched = false
+
+    MySQL.Async.fetchAll('SELECT * FROM wn_invoice WHERE identifier = @identifier', {
+        ['@identifier'] = playerIdentifier
+    }, function(result)
+        if result then
+            invoiceData = result
+        end
+        isFetched = true
+    end)
+
+    while not isFetched do
+        Wait(10)
+    end
+
+    return invoiceData
+end)
+
 lib.callback.register('wn_invoice:invoicePayed', function(id)
     local src = source
     local playerIdentifier = GetIdentifier(src)
@@ -72,4 +116,26 @@ lib.callback.register('wn_invoice:createInvoice', function(data)
     local timestamp = math.floor(date.date_to_pay / 1000)
     local date_to_pay = os.date('%Y-%m-%d %H:%M:%S', timestamp)
 
+end)
+
+exports('createInvoice', function(data)
+    local request_source = src
+    local playerIdentifier = GetIdentifier(request_source)
+    local invoiceData = {}
+    local isFetched = false
+
+    MySQL.Async.fetchAll('SELECT * FROM wn_invoice WHERE identifier = @identifier', {
+        ['@identifier'] = playerIdentifier
+    }, function(result)
+        if result then
+            invoiceData = result
+        end
+        isFetched = true
+    end)
+
+    while not isFetched do
+        Wait(10)
+    end
+
+    return invoiceData
 end)

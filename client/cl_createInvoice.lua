@@ -18,6 +18,7 @@ end)
 
 function OpenCreateInvoiceMenu()
     local data = {}
+    local job = GetJob()
 
     lib.registerContext({
         id = 'createinvoice',
@@ -52,7 +53,7 @@ function OpenCreateInvoiceMenu()
                 title = "As Job",
                 description = "Give Invoice as job",
                 onSelect = function()
-                    local job = giveInput('Create Invoice', 'Set Job Of Invoice', {'Set Job'}, nil, 'checkbox', 'createinvoice')
+                    local job = giveInput('Create Invoice', 'Set Job Of Invoice', {'Set Job for invoice as ' .. job}, nil, 'checkbox', 'createinvoice')
                     data.job = job
                 end
             },
@@ -80,6 +81,6 @@ function OpenCreateInvoiceMenu()
             },
         }
     })
-    
+
     lib.showContext('createinvoice')
 end
