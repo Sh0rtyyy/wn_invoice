@@ -96,6 +96,22 @@ function GetCops()
     end
 end
 
+function GetPlayerGroup(source)
+    local src = source
+    local player_group = "user"
+
+    if Config.Framework == "ESX" then
+        local xPlayer = ESX.GetPlayerFromId(src)
+        player_group = xPlayer.getGroup()
+    elseif Config.Framwork == "qbcore" then
+        player_group = QBCore.Functions.GetPermission(src)
+    elseif Config.Framework == "qbox" then
+        local player_group = exports.qbx_core:GetPermission(src)
+    end
+
+    return player_group
+end
+
 function CheckDistance(source, TargetCoords)
     local src = source
 
