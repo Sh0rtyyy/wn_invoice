@@ -59,7 +59,7 @@ end)
 -- job = Job that gave the invoice
 -- date = when was the invoice created
 -- date_to_pay = when needs to be the invoice payed
--- payed_date = when was bill payed
+-- paid_date = when was bill payed
 -- status = payed or notpayed
 
 function OpenPreInvoiceMenu()
@@ -106,6 +106,7 @@ function OpenInvoiceMenu(data, invoice_status)
     local options = {}
 
     for _, data in ipairs(invoices) do
+        local invoice_title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Paid Date: " .. data.paid_date,
         print("invoice_status", invoice_status)
         print("data.status", data.status)
         if invoice_status == data.status then
@@ -113,9 +114,10 @@ function OpenInvoiceMenu(data, invoice_status)
             if data.status == "unpaid" then
                 status = "red"
                 context_title = "Unpaid Invoices"
+                invoice_title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Due by: " .. data.date_to_pay,
             end
             table.insert(options, {
-                title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Due by " .. data.date_to_pay,
+                title = invoice_title,
                 description = string.upper(data.status),
                 icon = 'file-invoice',
                 colorScheme = status,

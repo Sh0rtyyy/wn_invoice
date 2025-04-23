@@ -12,6 +12,8 @@ Config.InvoiceKeyBind = "F5" -- or false3
 Config.CreateInvoiceCommand = "createinvoice"
 Config.UnemployedInvoices = false
 
+Config.DateFormat = '%Y-%m-%d'
+
 Config.JobInvoices = {
     police = {
         data = {

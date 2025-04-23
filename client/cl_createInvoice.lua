@@ -13,7 +13,7 @@ end)
 -- job = Job that gave the invoice
 -- date = when was the invoice created
 -- date_to_pay = when needs to be the invoice payed
--- payed_date = when was bill payed
+-- paid_date = when was bill payed
 -- status = payed or notpayed
 
 function OpenCreateInvoiceMenu()

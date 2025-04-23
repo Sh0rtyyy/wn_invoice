@@ -80,13 +80,13 @@ RegisterNetEvent('wn_invoice:invoicePayed', function(id)
 
     if invoiceData then
         MySQL.Async.execute('UPDATE wn_invoice SET status = @status WHERE identifier = @identifier AND id = @invoice_id', {
-            ['@status'] = 'payed',
+            ['@status'] = 'paid',
             ['@identifier'] = playerIdentifier,
             ['@invoice_id'] = invoice_id
         }, function(affectedRows)
             if affectedRows > 0 then
                 RemoveMoney("bank", invoiceData.amount, src)
-                print('Invoice ' .. invoice_id .. ' for player ' .. playerIdentifier .. ' marked as payed.')
+                print('Invoice ' .. invoice_id .. ' for player ' .. playerIdentifier .. ' marked as paid.')
                 DiscordLog(webhook, "Invoice Paid", 'Invoice ' .. invoice_id .. ' for player ' .. playerIdentifier .. ' was paid.')
             else
                 print('Failed to update the invoice status.')
@@ -131,13 +131,13 @@ end)
 
     if invoiceData then
         MySQL.Async.execute('UPDATE wn_invoice SET status = @status WHERE identifier = @identifier AND id = @invoice_id', {
-            ['@status'] = 'payed',
+            ['@status'] = 'paid',
             ['@identifier'] = playerIdentifier,
             ['@invoice_id'] = invoice_id
         }, function(affectedRows)
             if affectedRows > 0 then
                 RemoveMoney("bank", invoiceData.amount, src)
-                print('Invoice ' .. invoice_id .. ' for player ' .. playerIdentifier .. ' marked as payed.')
+                print('Invoice ' .. invoice_id .. ' for player ' .. playerIdentifier .. ' marked as paid.')
                 DiscordLog(webhook, "INvoice Paid", 'Invoice ' .. invoice_id .. ' for player ' .. playerIdentifier .. ' was paid.')
 
             else
@@ -160,7 +160,7 @@ RegisterNetEvent('wn_invoice:createInvoice', function(data)
 
     -- Convert timestamp to formatted date
     local timestamp = math.floor(invoice_data.date_to_pay / 1000)
-    local date_to_pay = os.date('%Y-%m-%d', timestamp)
+    local date_to_pay = os.date(Config.DateFormat, timestamp)
     print("Timestamp (in seconds):", timestamp)
     print("Converted date_to_pay:", date_to_pay)
 
@@ -183,24 +183,24 @@ RegisterNetEvent('wn_invoice:createInvoice', function(data)
     local amount = invoice_data.amount or 0
     print("Amount:", amount)
 
-    local job = invoice_data.job or ''
+    local job = invoice_data.job or 'Personal'
     print("Job:", job)
 
     local date = date_to_pay -- Use the formatted date for the invoice creation date
     print("Date (date_to_pay):", date)
 
-    local payed_date = invoice_data.payed_date or ''
-    print("Payed Date:", payed_date)
+    local paid_date = invoice_data.paid_date or ''
+    print("Payed Date:", paid_date)
 
     local status = invoice_data.status or 'unpaid'
     print("Status:", status)
 
     -- MySQL query to insert the invoice into the database
     local query = string.format([[ 
-        INSERT INTO `wn_invoice` (`identifier`, `source_identifier`, `name`, `source_name`, `reason`, `amount`, `job`, `date`, `date_to_pay`, `payed_date`, `status`)
+        INSERT INTO `wn_invoice` (`identifier`, `source_identifier`, `name`, `source_name`, `reason`, `amount`, `job`, `date`, `date_to_pay`, `paid_date`, `status`)
         VALUES ('%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s')
     ]], 
-    identifier, source_identifier, name, source_name, reason, amount, job, date, date_to_pay, payed_date, status)
+    identifier, source_identifier, name, source_name, reason, amount, job, date, date_to_pay, paid_date, status)
 
     -- Log the generated query to see what is being executed
     print("Generated SQL query: ", query)
@@ -253,18 +253,18 @@ exports('createInvoice', function(src)
     local date = date_to_pay -- Use the formatted date for the invoice creation date
     print("Date (date_to_pay):", date)
 
-    local payed_date = invoice_data.payed_date or ''
-    print("Payed Date:", payed_date)
+    local paid_date = invoice_data.paid_date or ''
+    print("Payed Date:", paid_date)
 
     local status = invoice_data.status or 'unpaid'
     print("Status:", status)
 
     -- MySQL query to insert the invoice into the database
     local query = string.format([[ 
-        INSERT INTO `wn_invoice` (`identifier`, `source_identifier`, `name`, `source_name`, `reason`, `amount`, `job`, `date`, `date_to_pay`, `payed_date`, `status`)
+        INSERT INTO `wn_invoice` (`identifier`, `source_identifier`, `name`, `source_name`, `reason`, `amount`, `job`, `date`, `date_to_pay`, `paid_date`, `status`)
         VALUES ('%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s')
     ]], 
-    identifier, source_identifier, name, source_name, reason, amount, job, date, date_to_pay, payed_date, status)
+    identifier, source_identifier, name, source_name, reason, amount, job, date, date_to_pay, paid_date, status)
 
     -- Log the generated query to see what is being executed
     print("Generated SQL query: ", query)
