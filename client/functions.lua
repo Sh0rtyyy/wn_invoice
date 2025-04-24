@@ -46,6 +46,11 @@ elseif Config.Framework == "qbox" then
 
 end
 
+RegisterNetEvent('wn_invoice:sendNotify')
+AddEventHandler('wn_invoice:sendNotify', function(type, title, text, icon, time)
+    Notify(type, title, text, icon, time)
+end)
+
 function Notify(type, title, text, icon, time)
     if Config.Notify == "ESX" then
         ESX.ShowNotification(text)

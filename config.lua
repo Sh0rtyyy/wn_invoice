@@ -18,7 +18,7 @@ Config.JobInvoices = {
     police = {
         data = {
             job = "police",
-            comission = 10
+            commission = 10
         },
         invoices = {
             {"Big speed", 500},
@@ -30,7 +30,7 @@ Config.JobInvoices = {
     sheriff = {
         data = {
             job = "sheriff",
-            comission = 20
+            commission = 20
         },
         invoices = {
             {"Big speed", 500},
@@ -41,7 +41,7 @@ Config.JobInvoices = {
     mechanic = {
         data = {
             job = "mechanic",
-            comission = 0,
+            commission = 0,
         },
         invoices = {
             {"Custom"}

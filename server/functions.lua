@@ -69,6 +69,50 @@ function GetName(source)
     end
 end
 
+function GetPlayerFromIdentifier(identifier)
+    if Config.Framework == "ESX" then
+        local xPlayer = ESX.GetPlayerFromIdentifier(identifier)
+        return xPlayer
+    elseif Config.Framework == "qbcore" then
+        local xPlayer = QBCore.Functions.GetPlayerFromIdentifier(identifier)
+        return xPlayer
+    elseif Config.Framework == "qbox" then
+        local xPlayer = exports.qbx_core:GetPlayerFromIdentifier(identifier)
+        return xPlayer
+    end
+end
+
+function AddSocietyMoney(job, amount)
+    if Config.Framework == "ESX" then
+        TriggerEvent('esx_society:getSociety', job, function(society)
+            TriggerEvent('esx_addonaccount:getSharedAccount', society.account, function(account)
+                if account then
+                    AddLog("function", {
+                        name = "AddJobMoney",
+                        data = {job = job, amount = amount},
+                        status = "ok"
+                    })
+
+                    account.addMoney(amount)
+                else
+                    AddLog("function", {
+                        name = "AddJobMoney",
+                        data = {job = job, amount = amount},
+                        status = "error",
+                        error = "account is nil"
+                    })
+                end
+            end)
+        end)
+    elseif Config.Framework == "qbcore" then
+        
+
+    elseif Config.Framework == "qbox" then
+        
+        
+    end
+end
+
 function GetCops()
     local cops = 0
 

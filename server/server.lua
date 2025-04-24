@@ -46,6 +46,20 @@ exports('requestInvoices', function(src)
     return invoiceData
 end)
 
+-- DB TABLUKA STRUCTURE
+-- id = referencial ID of invoice, for command deletation
+-- identifier = user that needs to pay identifier
+-- source_identifier = user that gave invoice
+-- name = user name that needs to pay identifier
+-- source_name = user name that gave invoice
+-- reason = why to pay
+-- amount = amount to pay
+-- job = Job that gave the invoice
+-- date = when was the invoice created
+-- date_to_pay = when needs to be the invoice payed
+-- paid_date = when was bill payed
+-- status = payed or notpayed
+
 RegisterNetEvent('wn_invoice:invoicePayed', function(id)
     local src = source
     local playerIdentifier = GetIdentifier(src)
@@ -76,7 +90,10 @@ RegisterNetEvent('wn_invoice:invoicePayed', function(id)
     local user_money = GetMoney("bank", invoiceData.amount, src)
     print("user_money", user_money)
     print("invoiceData.amount", invoiceData.amount)
-    if not user_money then print("Not enough money") return end
+    if not user_money then
+        TriggerClientEvent(src, "error", "Billing", "You dont have enought money")
+        return
+    end
 
     if invoiceData then
         MySQL.Async.execute('UPDATE wn_invoice SET status = @status WHERE identifier = @identifier AND id = @invoice_id', {
@@ -85,7 +102,21 @@ RegisterNetEvent('wn_invoice:invoicePayed', function(id)
             ['@invoice_id'] = invoice_id
         }, function(affectedRows)
             if affectedRows > 0 then
+                TriggerClientEvent(src, "success", "Billing", "You successfuly paid invoice #" .. invoice_id)
                 RemoveMoney("bank", invoiceData.amount, src)
+                if invoiceData.job == "personal" then
+                    local identifier = invoiceData.source_identifier
+                    local sender_source = GetPlayerFromIdentifier(identifier)
+                    AddMoney("bank", invoiceData.amount, sender_source)
+                else
+                    local commission = Config.JobInvoices[invoiceData.job].data.commission
+                    if commission == false then return end
+                    local receive = tonumber(invoiceData.amount)
+                    authorReceive = receive * (commission / 100)
+                    receive = receive - authorReceive
+                    AddMoney("bank", receive, sender_source)
+                    AddSocietyMoney(invoiceData.job, invoiceData.amount)
+                end
                 print('Invoice ' .. invoice_id .. ' for player ' .. playerIdentifier .. ' marked as paid.')
                 DiscordLog(webhook, "Invoice Paid", 'Invoice ' .. invoice_id .. ' for player ' .. playerIdentifier .. ' was paid.')
             else
@@ -208,6 +239,8 @@ RegisterNetEvent('wn_invoice:createInvoice', function(data)
     -- Execute the query using your preferred database connection method
     -- Example for using MySQL (adjust based on your framework and DB connection)
     MySQL.Async.execute(query, {}, function(rowsChanged)
+        TriggerClientEvent(src, "success", "Billing", "You successfuly created invoice #" .. invoice_id)
+        TriggerClientEvent(data.player, "success", "Billing", "You´ve recieved an invoice")
         print("Invoice created successfully, rows affected: ", rowsChanged)
         DiscordLog(webhook, "Invoice Created", 'Invoice with ID ' .. invoice_id .. ' was created for player ' .. playerIdentifier .. ' by ' .. source_identifier .. ' with amount to pay ' .. amount .. ' with reason ' .. reason)
     end)
@@ -272,6 +305,8 @@ exports('createInvoice', function(src)
     -- Execute the query using your preferred database connection method
     -- Example for using MySQL (adjust based on your framework and DB connection)
     MySQL.Async.execute(query, {}, function(rowsChanged)
+        TriggerClientEvent(src, "success", "Billing", "You successfuly created invoice #" .. invoice_id)
+        TriggerClientEvent(data.player, "success", "Billing", "You´ve recieved an invoice")
         print("Invoice created successfully, rows affected: ", rowsChanged)
         DiscordLog(webhook, "Invoice Created", 'Invoice with ID ' .. invoice_id .. ' was created for player ' .. playerIdentifier .. ' by ' .. source_identifier .. ' with amount to pay ' .. amount .. ' with reason ' .. reason)
     end)
