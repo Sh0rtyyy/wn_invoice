@@ -105,7 +105,7 @@ function AddSocietyMoney(job, amount)
             end)
         end)
     elseif Config.Framework == "qbcore" then
-        
+        exports['qb-management']:AddMoney(job, amount)
 
     elseif Config.Framework == "qbox" then
         
