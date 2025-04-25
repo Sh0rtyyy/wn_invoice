@@ -112,11 +112,11 @@ end
 -- paid_date = when was bill payed
 -- status = payed or notpayed
 
-function SeeDetails(data)
+local function SeeDetailsAdmin(data)
     lib.registerContext({
-        id = 'SeeDetails',
+        id = 'SeeDetailsAdmin',
         title = "Details for invoice " .. data.id,
-        menu = 'invoices_menu_admin',
+        menu = 'preinvoicemenuadmin',
         canClose = true,
         options = {
             {
@@ -158,7 +158,7 @@ function SeeDetails(data)
         }
     })
 
-    lib.showContext('SeeDetails')
+    lib.showContext('SeeDetailsAdmin')
 end
 
 function WhatToDo(data)
@@ -192,36 +192,4 @@ function WhatToDo(data)
     })
 
     lib.showContext('WhatToDo')
-end
-
-
-function OpenInvoice(data, status)
-    local payed = false
-    local desc = "Invoice desc:  \n  " .. data.reason .. "  \n  " .. "  \n  Issued by: " .. data.source_name
-    if data.job ~= nil then
-        desc = "Invoice desc:  \n  " .. data.reason .. "  \n  " .. "  \n  Issued by: " .. data.job .. "  \n  " .. data.source_name
-    end
-
-    if status == "payed" then
-        lib.alertDialog({
-            header = "Invoice #" .. data.id .. " - $" .. data.amount,
-            content = desc,
-            centered = true,
-            cancel = false
-        })
-    else
-        payed = lib.alertDialog({
-            header = "Invoice #" .. data.id .. " - $" .. data.amount,
-            content = desc,
-            centered = true,
-            labels = {
-                confirm = "Pay"
-            },
-            cancel = true
-        })
-        print("payed", payed)
-    end
-
-    print("payed 2", payed)
-    return payed
 end

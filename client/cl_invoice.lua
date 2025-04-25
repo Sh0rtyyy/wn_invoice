@@ -7,7 +7,7 @@ RegisterCommand(Config.InvoiceCommand, function()
         {
             title = "Open your invoices",
             description = "View and issue available invoices",
-            icon = 'star',
+            icon = 'invoice',
             onSelect = function()
                 OpenPreInvoiceMenu()
             end
@@ -21,7 +21,7 @@ RegisterCommand(Config.InvoiceCommand, function()
             {
                 title = "Open your invoices",
                 description = "View and issue available invoices",
-                icon = 'star',
+                icon = 'invoice',
                 onSelect = function()
                     OpenPreInvoiceMenu()
                 end
@@ -29,7 +29,7 @@ RegisterCommand(Config.InvoiceCommand, function()
             {
                 title = "Create invoice",
                 description = "Create invoice",
-                icon = 'star',
+                icon = 'alt',
                 onSelect = function()
                     OpenCreateInvoiceMenu()
                 end
@@ -77,7 +77,7 @@ function OpenPreInvoiceMenu()
                 description = "Open paid invoices",
                 progress = 100,
                 colorScheme = "green",
-                icon = 'star',
+                icon = 'check',
                 onSelect = function()
                     OpenInvoiceMenu(invoices, "payed")
                 end
@@ -87,7 +87,8 @@ function OpenPreInvoiceMenu()
                 description =  "Open unpaid invoices",
                 progress = 100,
                 colorScheme = "red",
-                icon = 'star',
+                --icon = 'exclamation',
+                icon = "hourglass-half",
                 onSelect = function()
                     OpenInvoiceMenu(invoices, "unpaid")
                 end
@@ -118,21 +119,14 @@ function OpenInvoiceMenu(data, invoice_status)
             end
             table.insert(options, {
                 title = invoice_title,
-                description = string.upper(data.status),
+                description = "See Details",
                 icon = 'file-invoice',
                 colorScheme = status,
                 progress = 100,
                 onSelect = function()
                     -- Optional: Handle selection, like showing full details or pay option
                     print("Selected invoice ID: " .. data.id)
-                    local payed = OpenInvoice(data, data.status)
-                    if payed == nil then OpenPreInvoiceMenu() end
-                    print("payed", payed)
-                    if payed == "confirm" then
-                        print("Invoice payed", data.id)
-                        TriggerServerEvent('wn_invoice:invoicePayed', data.id)
-                        --lib.callback.await('wn_invoice:invoicePayed', false, data.id)
-                    end
+                    SeeDetails(data)
                 end
             })
         end
@@ -151,6 +145,62 @@ function OpenInvoiceMenu(data, invoice_status)
     })
 
     lib.showContext('invoices_menu')
+end
+
+function SeeDetails(data)
+    lib.registerContext({
+        id = 'SeeDetails',
+        title = "Details for invoice " .. data.id,
+        menu = 'invoices_menu',
+        canClose = true,
+        options = {
+            {
+                title = "User Identifier: " .. data.identifier
+            },
+            {
+                title = "Sender Identifier: " .. data.source_identifier
+            },
+            {
+                title = "User Name: " .. data.name
+            },
+            {
+                title = "Sender Name: " .. data.source_name
+            },
+            {
+                title = "Reason: " .. data.reason
+            },
+            {
+                title = "Amount: " .. data.amount
+            },
+            {
+                title = "Job: " .. data.job
+            },
+            {
+                title = "Creation Date: " .. data.date
+            },
+            {
+                title = "Due Day: " .. data.date_to_pay
+            },
+            {
+                title = "Status: " .. string.upper(data.status)
+            },
+            {
+                title = "Pay Invoice",
+                onSelect = function()
+                    local payed = OpenInvoice(data, data.status)
+                    if payed == nil then OpenPreInvoiceMenu() end
+                    print("payed", payed)
+                    if payed == "confirm" then
+                        print("Invoice payed", data.id)
+                        TriggerServerEvent('wn_invoice:invoicePayed', data.id)
+                        --lib.callback.await('wn_invoice:invoicePayed', false, data.id)
+                    end
+                end
+            },
+        }
+    })
+
+    lib.showContext('SeeDetails')
 end
 
 function OpenInvoice(data, status)

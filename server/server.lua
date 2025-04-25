@@ -91,7 +91,7 @@ RegisterNetEvent('wn_invoice:invoicePayed', function(id)
     print("user_money", user_money)
     print("invoiceData.amount", invoiceData.amount)
     if not user_money then
-        TriggerClientEvent(src, "error", "Billing", "You dont have enought money")
+        TriggerClientEvent("wn_invoice:sendNotify", src, "error", "Billing", "You dont have enought money")
         return
     end
 

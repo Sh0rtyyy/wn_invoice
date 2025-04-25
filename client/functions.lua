@@ -60,6 +60,7 @@ function Notify(type, title, text, icon, time)
                 title = title,
                 duration = time,
                 description = text,
+                icon = "fas fa-receipt",
                 type = "success"
             })
         elseif type == "inform" then
@@ -67,6 +68,7 @@ function Notify(type, title, text, icon, time)
                 title = title,
                 duration = time,
                 description = text,
+                icon = "fas fa-receipt",
                 type = "inform"
             })
         elseif type == "error" then
@@ -74,6 +76,7 @@ function Notify(type, title, text, icon, time)
                 title = title,
                 duration = time,
                 description = text,
+                icon = "fas fa-receipt",
                 type = "error"
             })
         end
@@ -132,81 +135,12 @@ function GetJobGrade()
     end
 end
 
-function Dispatch(coords)
-    if Config.Dispatch == "cd_dispatch" then
-        local data = exports['cd_dispatch']:GetPlayerInfo()
-        TriggerServerEvent('cd_dispatch:AddNotification', {
-            job_table = Config.PoliceJobs,
-            coords = coords,
-            title = "10-90 - ATM Robbery",
-            message = "Somebody here is hacking an ATM !",
-            flash = 0,
-            unique_id = tostring(math.random(0000000, 9999999)),
-            blip = {
-                sprite = 40,
-                scale = 1.2,
-                colour = 1,
-                flashes = false,
-                text = text,
-                time = (5 * 60 * 1000),
-                sound = 1,
-            }
-        })
-    elseif Config.Dispatch == "linden_outlawalert" then
-        local data = { displayCode = "10-90", description = "House Robbery", isImportant = 1, recipientList = Config.PoliceJobs, length = '10000', infoM = 'fa-info-circle', info = "Alarm has turned on at the residence" }
-        local dispatchData = { dispatchData = data, caller = 'alarm', coords = coords }
-        TriggerServerEvent('wf-alerts:svNotify', dispatchData)
-    elseif Config.Dispatch == "ps-disptach" then
-        exports["ps-dispatch"]:CustomAlert({
-            coords = coords,
-            message = "House Robbery",
-            dispatchCode = "10-90",
-            description = "Alarm has turned on at the residence",
-            radius = 0,
-            sprite = 40,
-            color = 1,
-            scale = 1.2,
-            length = 3,
-        })
-    elseif Config.Dispatch == "core-dispatch" then
-        for k, v in pairs(Config.PoliceJobs) do
-            exports['core_dispatch']:addCall("10-90", "Alarm has turned on at the residence", {
-                }, {coords.xyz}, v, 10000, 11, 5 
-            )
-        end
-    elseif Config.Dispatch == "qs-dispatch" then
-        TriggerServerEvent('qs-dispatch:server:CreateDispatchCall', {
-            job = Config.PoliceJobs,
-            callLocation = coords,
-            callCode = { code = '<CALL CODE>', snippet = '<CALL SNIPPED: 10-90>' },
-            message = "10-90 - House Robbery",
-            flashes = false, -- you can set to true if you need call flashing sirens...
-            image = "URL", -- Url for image to attach to the call
-            --you can use the getSSURL export to get this url
-            blip = {
-                sprite = 40,
-                scale = 1.2,
-                colour = 1,
-                flashes = false, -- blip flashes
-                text = '10-90 - House Robbery', -- blip text
-                time = (1 * 60000), --blip fadeout time (1 * 60000) = 1 minute
-            },
-            otherData = {
-               {
-                   text = 'Alarm has turned on at the residence', -- text of the other data item (can add more than one)
-                   icon = 'fas fa-user-secret', -- icon font awesome https://fontawesome.com/icons/
-               }
-             }
-        })
-    end
-end
-
 function SelectPlayer(returnmenu)
     local choosenPlayer = nil
     local players = GetActivePlayers()
     local pedCoords = GetEntityCoords(PlayerPedId())
     local closePlayers = {}
-    local title = "Vyber hráče"
+    local title = "Select player"
     if newTitle then
         title = newTitle
     end
@@ -214,22 +148,15 @@ function SelectPlayer(returnmenu)
         if v ~= PlayerId() then -- Check if v is not the same as the local player's ID
             local dist = #(GetEntityCoords(GetPlayerPed(v)) - pedCoords)
             if dist < 4 and dist > -1 then
-                table.insert(closePlayers, {label = 'Hráč č. '..k, args = {id = v}})
+                table.insert(closePlayers, {label = 'Player '..k, args = {id = v}})
             end
         end
     end
-	if not closePlayers[1] then 
-        lib.notify({
-            title = 'Inventář',
-            description = 'Nikdo není poblíž',
-            icon = 'fa-solid fa-hand-holding-hand',
-            duration = 5000,
-            type = 'error'
-        })
+	if not closePlayers[1] then
+        Notify("error", "Billing", "Nobody is near")
     return nil end
 
     local currentlyHoveredPlayer = closePlayers[1].args.id
-
 
     local id = math.random(1, 99999)
     lib.registerMenu({
