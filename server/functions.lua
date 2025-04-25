@@ -83,33 +83,21 @@ function GetPlayerFromIdentifier(identifier)
 end
 
 function AddSocietyMoney(job, amount)
+    local societyJob = job
+    local giveAmount = amount
+
     if Config.Framework == "ESX" then
-        TriggerEvent('esx_society:getSociety', job, function(society)
+        TriggerEvent('esx_society:getSociety', societyJob, function(society)
             TriggerEvent('esx_addonaccount:getSharedAccount', society.account, function(account)
                 if account then
-                    AddLog("function", {
-                        name = "AddJobMoney",
-                        data = {job = job, amount = amount},
-                        status = "ok"
-                    })
-
-                    account.addMoney(amount)
-                else
-                    AddLog("function", {
-                        name = "AddJobMoney",
-                        data = {job = job, amount = amount},
-                        status = "error",
-                        error = "account is nil"
-                    })
+                    account.addMoney(giveAmount)
                 end
             end)
         end)
     elseif Config.Framework == "qbcore" then
-        exports['qb-management']:AddMoney(job, amount)
-
+        exports['qb-management']:AddMoney(societyJob, giveAmount)
     elseif Config.Framework == "qbox" then
-        
-        
+        exports['Renewed-Banking']:addAccountMoney(societyJob, giveAmount)
     end
 end
 
