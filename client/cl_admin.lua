@@ -12,6 +12,7 @@ end)
 -- reason = why to pay
 -- amount = amount to pay
 -- job = Job that gave the invoice
+-- job_aname = Job label
 -- date = when was the invoice created
 -- date_to_pay = when needs to be the invoice payed
 -- paid_date = when was bill payed
@@ -35,7 +36,7 @@ function OpenPreInvoiceMenuAdmin(data, player)
                 colorScheme = "green",
                 icon = 'star',
                 onSelect = function()
-                    OpenInvoiceMenuAdmin(invoices, "payed")
+                    OpenInvoiceMenuAdmin(invoices, "paid")
                 end
             },
             {
@@ -77,7 +78,7 @@ function OpenInvoiceMenuAdmin(data, invoice_status)
                 colorScheme = status,
                 progress = 100,
                 onSelect = function()
-                    SeeDetails(data)
+                    SeeDetailsAdmin(data)
                 end
             })
         end
@@ -107,53 +108,54 @@ end
 -- reason = why to pay
 -- amount = amount to pay
 -- job = Job that gave the invoice
+-- job_aname = Job label
 -- date = when was the invoice created
 -- date_to_pay = when needs to be the invoice payed
 -- paid_date = when was bill payed
 -- status = payed or notpayed
 
-local function SeeDetailsAdmin(data)
+function SeeDetailsAdmin(data)
     lib.registerContext({
         id = 'SeeDetailsAdmin',
-        title = "Details for invoice " .. data.id,
+        title = "📄 Details for invoice #" .. data.id,
         menu = 'preinvoicemenuadmin',
         canClose = true,
         options = {
             {
-                title = "Admin Actions",
+                title = "🛠️ Admin Actions",
                 onSelect = function()
                     WhatToDo(data)
                 end
             },
             {
-                title = "User Identifier: " .. data.identifier
+                title = "🧾 User Identifier: " .. data.identifier
             },
             {
-                title = "Sender Identifier: " .. data.source_identifier
+                title = "📤 Sender Identifier: " .. data.source_identifier
             },
             {
-                title = "User Name: " .. data.name
+                title = "👤 User Name: " .. data.name
             },
             {
-                title = "Sender Name: " .. data.source_name
+                title = "👮 Sender Name: " .. data.source_name
             },
             {
-                title = "Reason: " .. data.reason
+                title = "📝 Reason: " .. data.reason
             },
             {
-                title = "Amount: " .. data.amount
+                title = "💰 Amount: $" .. data.amount
             },
             {
-                title = "Job: " .. data.job
+                title = "🏢 Job: " .. data.job_label
             },
             {
-                title = "Creation Date: " .. data.date
+                title = "📅 Creation Date: " .. data.date
             },
             {
-                title = "Due Day: " .. data.date_to_pay
+                title = "⏳ Due Day: " .. data.date_to_pay
             },
             {
-                title = "Status: " .. data.status
+                title = "📌 Status: " .. string.upper(data.status)
             },
         }
     })

@@ -39,6 +39,7 @@ end
 
 function GetIdentifier(source)
     local src = source
+    print(src)
 
     -- TODO: Zkontrolovať
     if Config.Framework == "ESX" then

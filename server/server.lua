@@ -1,9 +1,11 @@
-lib.callback.register('wn_invoice:requestInvoices', function(request_src)
+lib.callback.register('wn_invoice:requestInvoices', function(source, request_src)
+    print("requestInvoices")
+    print("request_src", request_src)
+    local src = source
     if request_src ~= nil then
-        local src = request_src
-    else
-        local src = source
+        src = request_src
     end
+    print("src", src)
     local playerIdentifier = GetIdentifier(src)
     local invoiceData = {}
     local isFetched = false
@@ -95,7 +97,7 @@ RegisterNetEvent('wn_invoice:invoicePayed', function(id)
         return
     end
 
-    if invoiceData then
+    if invoiceData and user_money then
         MySQL.Async.execute('UPDATE wn_invoice SET status = @status WHERE identifier = @identifier AND id = @invoice_id', {
             ['@status'] = 'paid',
             ['@identifier'] = playerIdentifier,
@@ -104,7 +106,7 @@ RegisterNetEvent('wn_invoice:invoicePayed', function(id)
             if affectedRows > 0 then
                 TriggerClientEvent(src, "success", "Billing", "You successfuly paid invoice #" .. invoice_id)
                 RemoveMoney("bank", invoiceData.amount, src)
-                if invoiceData.job == "personal" then
+                if invoiceData.job == "Personal" then
                     local identifier = invoiceData.source_identifier
                     local sender_source = GetPlayerFromIdentifier(identifier)
                     AddMoney("bank", invoiceData.amount, sender_source)
@@ -112,6 +114,8 @@ RegisterNetEvent('wn_invoice:invoicePayed', function(id)
                     local commission = Config.JobInvoices[invoiceData.job].data.commission
                     if commission == false then return end
                     local receive = tonumber(invoiceData.amount)
+                    local identifier = invoiceData.source_identifier
+                    local sender_source = GetPlayerFromIdentifier(identifier)
                     authorReceive = receive * (commission / 100)
                     receive = receive - authorReceive
                     AddMoney("bank", receive, sender_source)
@@ -190,10 +194,8 @@ RegisterNetEvent('wn_invoice:createInvoice', function(data)
     print("data2", json.encode(invoice_data))
 
     -- Convert timestamp to formatted date
-    local timestamp = math.floor(invoice_data.date_to_pay / 1000)
-    local date_to_pay = os.date(Config.DateFormat, timestamp)
-    print("Timestamp (in seconds):", timestamp)
-    print("Converted date_to_pay:", date_to_pay)
+    local date_to_pay = invoice_data.date_to_pay
+    print("date_to_pay:", date_to_pay)
 
     -- Prepare the data to be inserted into the database
     local identifier = GetIdentifier(data.player)
@@ -217,6 +219,9 @@ RegisterNetEvent('wn_invoice:createInvoice', function(data)
     local job = invoice_data.job or 'Personal'
     print("Job:", job)
 
+    local jobLabel = invoice_data.job_label or 'Personal'
+    print("jobLabel:", jobLabel)
+
     local date = date_to_pay -- Use the formatted date for the invoice creation date
     print("Date (date_to_pay):", date)
 
@@ -227,26 +232,44 @@ RegisterNetEvent('wn_invoice:createInvoice', function(data)
     print("Status:", status)
 
     -- MySQL query to insert the invoice into the database
-    local query = string.format([[ 
-        INSERT INTO `wn_invoice` (`identifier`, `source_identifier`, `name`, `source_name`, `reason`, `amount`, `job`, `date`, `date_to_pay`, `paid_date`, `status`)
-        VALUES ('%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s')
-    ]], 
-    identifier, source_identifier, name, source_name, reason, amount, job, date, date_to_pay, paid_date, status)
+    local query = [[ 
+        INSERT INTO `wn_invoice` 
+        (`identifier`, `source_identifier`, `name`, `source_name`, `reason`, `amount`, `job`, `job_label`, `date`, `date_to_pay`, `paid_date`, `status`)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ]]
 
-    -- Log the generated query to see what is being executed
-    print("Generated SQL query: ", query)
+    local values = {
+        identifier,
+        source_identifier,
+        name,
+        source_name,
+        reason,
+        amount,
+        job,
+        jobLabel,
+        date,
+        date_to_pay,
+        paid_date,
+        status
+    }
 
-    -- Execute the query using your preferred database connection method
-    -- Example for using MySQL (adjust based on your framework and DB connection)
-    MySQL.Async.execute(query, {}, function(rowsChanged)
-        TriggerClientEvent(src, "success", "Billing", "You successfuly created invoice #" .. invoice_id)
-        TriggerClientEvent(data.player, "success", "Billing", "You´ve recieved an invoice")
-        print("Invoice created successfully, rows affected: ", rowsChanged)
-        DiscordLog(webhook, "Invoice Created", 'Invoice with ID ' .. invoice_id .. ' was created for player ' .. playerIdentifier .. ' by ' .. source_identifier .. ' with amount to pay ' .. amount .. ' with reason ' .. reason)
+    MySQL.insert(query, values, function(insertId)
+        if insertId and insertId > 0 then
+            print("Invoice created with ID:", insertId)
+
+            TriggerClientEvent("success", src, "Billing", "You successfully created invoice #" .. insertId)
+            TriggerClientEvent("success", data.player, "Billing", "You've received an invoice")
+
+            DiscordLog(webhook, "Invoice Created", ('Invoice with ID %s was created for player %s by %s with amount $%s for reason: %s'):format(
+                insertId, identifier, source_identifier, amount, reason
+            ))
+        else
+            print("❌ Failed to insert invoice or retrieve ID.")
+        end
     end)
 end)
 
-exports('createInvoice', function(src)
+exports('createInvoice', function(src, data)
     local src = source
     local invoice_data = data
     print("Creating invoice from source ", src)
@@ -256,10 +279,8 @@ exports('createInvoice', function(src)
     print("data2", json.encode(invoice_data))
 
     -- Convert timestamp to formatted date
-    local timestamp = math.floor(invoice_data.date_to_pay / 1000)
-    local date_to_pay = os.date('%Y-%m-%d', timestamp)
-    print("Timestamp (in seconds):", timestamp)
-    print("Converted date_to_pay:", date_to_pay)
+    local date_to_pay = invoice_data.date_to_pay
+    print("date_to_pay:", date_to_pay)
 
     -- Prepare the data to be inserted into the database
     local identifier = GetIdentifier(data.player)
@@ -280,8 +301,11 @@ exports('createInvoice', function(src)
     local amount = invoice_data.amount or 0
     print("Amount:", amount)
 
-    local job = invoice_data.job or ''
+    local job = invoice_data.job or 'Personal'
     print("Job:", job)
+
+    local jobLabel = invoice_data.job_label or 'Personal'
+    print("jobLabel:", jobLabel)
 
     local date = date_to_pay -- Use the formatted date for the invoice creation date
     print("Date (date_to_pay):", date)
@@ -293,21 +317,39 @@ exports('createInvoice', function(src)
     print("Status:", status)
 
     -- MySQL query to insert the invoice into the database
-    local query = string.format([[ 
-        INSERT INTO `wn_invoice` (`identifier`, `source_identifier`, `name`, `source_name`, `reason`, `amount`, `job`, `date`, `date_to_pay`, `paid_date`, `status`)
-        VALUES ('%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s')
-    ]], 
-    identifier, source_identifier, name, source_name, reason, amount, job, date, date_to_pay, paid_date, status)
+    local query = [[ 
+        INSERT INTO `wn_invoice` 
+        (`identifier`, `source_identifier`, `name`, `source_name`, `reason`, `amount`, `job`, `job_label`, `date`, `date_to_pay`, `paid_date`, `status`)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ]]
 
-    -- Log the generated query to see what is being executed
-    print("Generated SQL query: ", query)
+    local values = {
+        identifier,
+        source_identifier,
+        name,
+        source_name,
+        reason,
+        amount,
+        job,
+        jobLabel,
+        date,
+        date_to_pay,
+        paid_date,
+        status
+    }
 
-    -- Execute the query using your preferred database connection method
-    -- Example for using MySQL (adjust based on your framework and DB connection)
-    MySQL.Async.execute(query, {}, function(rowsChanged)
-        TriggerClientEvent(src, "success", "Billing", "You successfuly created invoice #" .. invoice_id)
-        TriggerClientEvent(data.player, "success", "Billing", "You´ve recieved an invoice")
-        print("Invoice created successfully, rows affected: ", rowsChanged)
-        DiscordLog(webhook, "Invoice Created", 'Invoice with ID ' .. invoice_id .. ' was created for player ' .. playerIdentifier .. ' by ' .. source_identifier .. ' with amount to pay ' .. amount .. ' with reason ' .. reason)
+    MySQL.insert(query, values, function(insertId)
+        if insertId and insertId > 0 then
+            print("Invoice created with ID:", insertId)
+
+            TriggerClientEvent("success", src, "Billing", "You successfully created invoice #" .. insertId)
+            TriggerClientEvent("success", data.player, "Billing", "You've received an invoice")
+
+            DiscordLog(webhook, "Invoice Created", ('Invoice with ID %s was created for player %s by %s with amount $%s for reason: %s'):format(
+                insertId, identifier, source_identifier, amount, reason
+            ))
+        else
+            print("❌ Failed to insert invoice or retrieve ID.")
+        end
     end)
 end)

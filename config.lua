@@ -12,6 +12,9 @@ Config.InvoiceKeyBind = "F5" -- or false3
 Config.CreateInvoiceCommand = "createinvoice"
 Config.UnemployedInvoices = false
 
+Config.AdminCommand = "invoiceadmin"
+Config.AdminCommandAccess = {"admin"}
+
 Config.DateFormat = '%Y-%m-%d'
 
 Config.JobInvoices = {
@@ -23,8 +26,7 @@ Config.JobInvoices = {
         invoices = {
             {"Big speed", 500},
             {"Theft", 500},
-            {"Red Light", 500},
-            {"Custom"}
+            {"Red Light", 500}
         },
     },
     sheriff = {
@@ -43,8 +45,6 @@ Config.JobInvoices = {
             job = "mechanic",
             commission = 0,
         },
-        invoices = {
-            {"Custom"}
-        },
+        invoices = false
     },
 }

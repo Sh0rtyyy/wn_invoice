@@ -113,6 +113,28 @@ function GetJob()
     end
 end
 
+function GetJobLabel()
+    if Config.Framework == "ESX" then
+        if ESX.GetPlayerData().job then
+            return ESX.GetPlayerData().job.label
+        else
+            return false
+        end
+    elseif Config.Framework == "qbcore" then
+        if QBCore.Functions.GetPlayerData().job then
+            return QBCore.Functions.GetPlayerData().job.label
+        else
+            return false
+        end
+    elseif Config.Framework == "qbox" then
+        if QBX.PlayerData.job then
+            return QBX.PlayerData.job.label
+        else
+            return false
+        end
+    end
+end
+
 function GetJobGrade()
     if Config.Framework == "ESX" then
         if ESX.GetPlayerData().job then
@@ -196,7 +218,7 @@ end
 
 function giveInput(dialog_name, title, rownames, default, type, returnmenu)
     local input = lib.inputDialog(dialog_name, {
-        {type = type, label = title, description = rownames, default = default, format = "DD/MM/YYYY"},
+        {type = type, label = title, description = rownames, default = default, format = "DD/MM/YYYY", returnString = true},
     })
  
     if not input then return end

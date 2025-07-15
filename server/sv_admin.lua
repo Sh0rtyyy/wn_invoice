@@ -1,22 +1,28 @@
-RegisterCommand(Config.AdminCommand, function()
-    local src = souce
-    print(args[1])
-    print(args[2])
-    local invoice = lib.callback.await('wn_invoice:requestInvoices', false, args[1])
+RegisterCommand(Config.AdminCommand, function(source, args, rawCommand)
+    local src = source
+    local argumnt = args[1]
+    local invoice = GetInvoiceAdmin(argumnt)
     local group = GetPlayerGroup(src)
 
-    if group ~= Config.AdminCommandAccess then return end
-    TriggerClientEvent('wn_invoice:showPlayersInvoices', src, invoice, args[1])
+    print(group)
+    print(json.encode(invoice))
+    for i, v in ipairs(Config.AdminCommandAccess) do
+        if group ~= v then return end
+        print(group)
+        TriggerClientEvent('wn_invoice:showPlayersInvoices', src, invoice, args[1])
+    end
 end)
 
 RegisterNetEvent('wn_invoice:adminAction', function(action, data)
     local src = source
     local group = GetPlayerGroup(src)
 
-    if group ~= Config.AdminCommandAccess then
-        KickCheater(src, "Tried to exploit admin action")
-        DiscordLog(webhook, "Invoice Exploit", GetPlayerName(src) .. " tried to use admin action without an admin perms")
-        return
+    for i, v in ipairs(Config.AdminCommandAccess) do
+        if group ~= v then
+            KickCheater(src, "Tried to exploit admin action")
+            DiscordLog(webhook, "Invoice Exploit", GetPlayerName(src) .. " tried to use admin action without an admin perms")
+            return
+        end
     end
 
     local invoice_id = data.id -- Make sure the client sends invoice ID in `data`
@@ -49,3 +55,26 @@ RegisterNetEvent('wn_invoice:adminAction', function(action, data)
         print("Unknown action: ", action)
     end
 end)
+
+function GetInvoiceAdmin(source)
+    local src = source
+    print("src", src)
+    local playerIdentifier = GetIdentifier(src)
+    local invoiceData = {}
+    local isFetched = false
+
+    MySQL.Async.fetchAll('SELECT * FROM wn_invoice WHERE identifier = @identifier', {
+        ['@identifier'] = playerIdentifier
+    }, function(result)
+        if result then
+            invoiceData = result
+        end
+        isFetched = true
+    end)
+
+    while not isFetched do
+        Wait(10)
+    end
+
+    return invoiceData
+end

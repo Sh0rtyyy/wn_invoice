@@ -5,7 +5,7 @@ RegisterCommand(Config.InvoiceCommand, function()
 
     local option = {
         {
-            title = "Open your invoices",
+            title = "📄 Open your invoices",
             description = "View and issue available invoices",
             icon = 'invoice',
             onSelect = function()
@@ -19,7 +19,7 @@ RegisterCommand(Config.InvoiceCommand, function()
         print(jobName)
         option = {
             {
-                title = "Open your invoices",
+                title = "📄 Open your invoices",
                 description = "View and issue available invoices",
                 icon = 'invoice',
                 onSelect = function()
@@ -27,7 +27,7 @@ RegisterCommand(Config.InvoiceCommand, function()
                 end
             },
             {
-                title = "Create invoice",
+                title = "🧾 Create invoice",
                 description = "Create invoice",
                 icon = 'alt',
                 onSelect = function()
@@ -57,6 +57,7 @@ end)
 -- reason = why to pay
 -- amount = amount to pay
 -- job = Job that gave the invoice
+-- job_aname = Job label
 -- date = when was the invoice created
 -- date_to_pay = when needs to be the invoice payed
 -- paid_date = when was bill payed
@@ -79,7 +80,7 @@ function OpenPreInvoiceMenu()
                 colorScheme = "green",
                 icon = 'check',
                 onSelect = function()
-                    OpenInvoiceMenu(invoices, "payed")
+                    OpenInvoiceMenu(invoices, "paid")
                 end
             },
             {
@@ -107,7 +108,7 @@ function OpenInvoiceMenu(data, invoice_status)
     local options = {}
 
     for _, data in ipairs(invoices) do
-        local invoice_title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Paid Date: " .. data.paid_date,
+        local invoice_title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Paid Date: " .. data.paid_date
         print("invoice_status", invoice_status)
         print("data.status", data.status)
         if invoice_status == data.status then
@@ -115,7 +116,7 @@ function OpenInvoiceMenu(data, invoice_status)
             if data.status == "unpaid" then
                 status = "red"
                 context_title = "Unpaid Invoices"
-                invoice_title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Due by: " .. data.date_to_pay,
+                invoice_title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Due by: " .. data.date_to_pay
             end
             table.insert(options, {
                 title = invoice_title,
@@ -148,56 +149,55 @@ function OpenInvoiceMenu(data, invoice_status)
 end
 
 function SeeDetails(data)
+    local options = {
+        {
+            title = "User Name: " .. data.name
+        },
+        {
+            title = "Sender Name: " .. data.source_name
+        },
+        {
+            title = "Reason: " .. data.reason
+        },
+        {
+            title = "Amount: " .. data.amount
+        },
+        {
+            title = "Job: " .. data.job_label
+        },
+        {
+            title = "Creation Date: " .. data.date
+        },
+        {
+            title = "Due Day: " .. data.date_to_pay
+        },
+        {
+            title = "Status: " .. string.upper(data.status)
+        }
+    }
+
+    -- Add "Pay Invoice" option only if status is NOT "paid"
+    if string.lower(data.status) ~= "paid" then
+        table.insert(options, {
+            title = "Pay Invoice",
+            onSelect = function()
+                local payed = OpenInvoice(data, data.status)
+                if payed == nil then OpenPreInvoiceMenu() end
+                print("payed", payed)
+                if payed == "confirm" then
+                    print("Invoice payed", data.id)
+                    TriggerServerEvent('wn_invoice:invoicePayed', data.id)
+                end
+            end
+        })
+    end
+
     lib.registerContext({
         id = 'SeeDetails',
-        title = "Details for invoice " .. data.id,
+        title = "Details for invoice #" .. data.id,
         menu = 'invoices_menu',
         canClose = true,
-        options = {
-            {
-                title = "User Identifier: " .. data.identifier
-            },
-            {
-                title = "Sender Identifier: " .. data.source_identifier
-            },
-            {
-                title = "User Name: " .. data.name
-            },
-            {
-                title = "Sender Name: " .. data.source_name
-            },
-            {
-                title = "Reason: " .. data.reason
-            },
-            {
-                title = "Amount: " .. data.amount
-            },
-            {
-                title = "Job: " .. data.job
-            },
-            {
-                title = "Creation Date: " .. data.date
-            },
-            {
-                title = "Due Day: " .. data.date_to_pay
-            },
-            {
-                title = "Status: " .. string.upper(data.status)
-            },
-            {
-                title = "Pay Invoice",
-                onSelect = function()
-                    local payed = OpenInvoice(data, data.status)
-                    if payed == nil then OpenPreInvoiceMenu() end
-                    print("payed", payed)
-                    if payed == "confirm" then
-                        print("Invoice payed", data.id)
-                        TriggerServerEvent('wn_invoice:invoicePayed', data.id)
-                        --lib.callback.await('wn_invoice:invoicePayed', false, data.id)
-                    end
-                end
-            },
-        }
+        options = options
     })
 
     lib.showContext('SeeDetails')
@@ -207,10 +207,10 @@ function OpenInvoice(data, status)
     local payed = false
     local desc = "Invoice desc:  \n  " .. data.reason .. "  \n  " .. "  \n  Issued by: " .. data.source_name
     if data.job ~= nil then
-        desc = "Invoice desc:  \n  " .. data.reason .. "  \n  " .. "  \n  Issued by: " .. data.job .. "  \n  " .. data.source_name
+        desc = "Invoice desc:  \n  " .. data.reason .. "  \n  " .. "  \n  Issued by: " .. data.job_label .. "  \n  " .. data.source_name
     end
 
-    if status == "payed" then
+    if status == "paid" then
         lib.alertDialog({
             header = "Invoice #" .. data.id .. " - $" .. data.amount,
             content = desc,
