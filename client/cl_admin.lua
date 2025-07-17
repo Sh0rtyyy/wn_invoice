@@ -1,124 +1,114 @@
-RegisterNetEvent('wn_invoice:showPlayersInvoices')
-AddEventHandler('wn_invoice:showPlayersInvoices', function(data, player)
-    OpenPreInvoiceMenuAdmin(data, player)
+lib.locale()
+
+RegisterNetEvent('wn_billing:showPlayersbillings')
+AddEventHandler('wn_billing:showPlayersbillings', function(data, player)
+    OpenPrebillingMenuAdmin(data, player)
 end)
 
 -- DB TABLUKA STRUCTURE
--- id = referencial ID of invoice, for command deletation
+-- id = referencial ID of billing, for command deletation
 -- identifier = user that needs to pay identifier
--- source_identifier = user that gave invoice
+-- source_identifier = user that gave billing
 -- name = user name that needs to pay identifier
--- source_name = user name that gave invoice
+-- source_name = user name that gave billing
 -- reason = why to pay
 -- amount = amount to pay
--- job = Job that gave the invoice
+-- job = Job that gave the billing
 -- job_aname = Job label
--- date = when was the invoice created
--- date_to_pay = when needs to be the invoice payed
+-- date = when was the billing created
+-- date_to_pay = when needs to be the billing payed
 -- paid_date = when was bill payed
 -- status = payed or notpayed
 
-function OpenPreInvoiceMenuAdmin(data, player)
-    local invoices = data
+function OpenPrebillingMenuAdmin(data, player)
+    local billings = data
     local id = player
-    print("Opening Pre Invoice Menu Admin for player " .. id)
-    print(json.encode(invoices))
+    print("Opening Pre billing Menu Admin for player " .. id)
+    print(json.encode(billings))
 
     lib.registerContext({
-        id = 'preinvoicemenuadmin',
-        title = "Invoice Menu for player " .. id,
+        id = 'prebillingmenuadmin',
+        title = locale("billing_options_title", id),
         canClose = true,
         options = {
-            {
-                title = "Open paid invoices",
-                description = "Open paid invoices",
+           {
+                title = locale("view_paid_title"),
+                description = locale("view_paid_desc"),
                 progress = 100,
                 colorScheme = "green",
-                icon = 'star',
                 onSelect = function()
-                    OpenInvoiceMenuAdmin(invoices, "paid")
+                    OpenbillingMenuAdmin(billings, "paid")
                 end
             },
             {
-                title = "Open unpaid invoices",
-                description =  "Open unpaid invoices",
+                title = locale("view_unpaid_title"),
+                description = locale("view_unpaid_desc"),
                 progress = 100,
                 colorScheme = "red",
-                icon = 'star',
                 onSelect = function()
-                    OpenInvoiceMenuAdmin(invoices, "unpaid")
+                    OpenbillingMenuAdmin(billings, "unpaid")
                 end
             }
         }
     })
 
-    lib.showContext('preinvoicemenuadmin')
+    lib.showContext('prebillingmenuadmin')
 end
 
-function OpenInvoiceMenuAdmin(data, invoice_status)
-    local invoices = data
-    local invoice_status = invoice_status
-    local status = "green"
-    local context_title = "Paid Invoices"
+function OpenbillingMenuAdmin(data, billing_status)
+    local billings = data
+    local statusColor = billing_status == "paid" and "green" or "red"
+    local context_title = billing_status == "paid" and locale("paid_title") or locale("unpaid_title")
     local options = {}
 
-    for _, data in ipairs(invoices) do
-        print("invoice_status", invoice_status)
-        print("data.status", data.status)
-        if invoice_status == data.status then
-            print("Shown invoice ", invoice_status, data.status)
-            if data.status == "unpaid" then
-                status = "red"
-                context_title = "Unpaid Invoices"
-            end
+    for _, entry in ipairs(billings) do
+        if billing_status == entry.status then
             table.insert(options, {
-                title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Due by " .. data.date_to_pay,
-                description = "See details",
-                icon = 'file-invoice',
-                colorScheme = status,
+                title = locale("billing_entry_title", entry.id, entry.amount, entry.date_to_pay),
+                description = locale("billing_entry_desc"),
+                colorScheme = statusColor,
                 progress = 100,
                 onSelect = function()
-                    SeeDetailsAdmin(data)
+                    SeeDetailsAdmin(entry)
                 end
             })
         end
     end
 
-    -- Register and show the context menu
     lib.registerContext({
-        id = 'invoices_menu_admin',
+        id = 'billings_menu_admin',
         title = context_title,
         canClose = true,
-        menu = 'preinvoicemenuadmin',
+        menu = 'prebillingmenuadmin',
         onBack = function()
             print('Went back!')
         end,
         options = options
     })
 
-    lib.showContext('invoices_menu_admin')
+    lib.showContext('billings_menu_admin')
 end
 
 -- DB TABLUKA STRUCTURE
--- id = referencial ID of invoice, for command deletation
+-- id = referencial ID of billing, for command deletation
 -- identifier = user that needs to pay identifier
--- source_identifier = user that gave invoice
+-- source_identifier = user that gave billing
 -- name = user name that needs to pay identifier
--- source_name = user name that gave invoice
+-- source_name = user name that gave billing
 -- reason = why to pay
 -- amount = amount to pay
--- job = Job that gave the invoice
+-- job = Job that gave the billing
 -- job_aname = Job label
--- date = when was the invoice created
--- date_to_pay = when needs to be the invoice payed
+-- date = when was the billing created
+-- date_to_pay = when needs to be the billing payed
 -- paid_date = when was bill payed
 -- status = payed or notpayed
 
 function SeeDetailsAdmin(data)
     lib.registerContext({
         id = 'SeeDetailsAdmin',
-        title = "📄 Details for invoice #" .. data.id,
-        menu = 'preinvoicemenuadmin',
+        title = "📄 Billing Details - #" .. data.id,
+        menu = 'prebillingmenuadmin',
         canClose = true,
         options = {
             {
@@ -127,36 +117,16 @@ function SeeDetailsAdmin(data)
                     WhatToDo(data)
                 end
             },
-            {
-                title = "🧾 User Identifier: " .. data.identifier
-            },
-            {
-                title = "📤 Sender Identifier: " .. data.source_identifier
-            },
-            {
-                title = "👤 User Name: " .. data.name
-            },
-            {
-                title = "👮 Sender Name: " .. data.source_name
-            },
-            {
-                title = "📝 Reason: " .. data.reason
-            },
-            {
-                title = "💰 Amount: $" .. data.amount
-            },
-            {
-                title = "🏢 Job: " .. data.job_label
-            },
-            {
-                title = "📅 Creation Date: " .. data.date
-            },
-            {
-                title = "⏳ Due Day: " .. data.date_to_pay
-            },
-            {
-                title = "📌 Status: " .. string.upper(data.status)
-            },
+            { title = "🧾 User Identifier: " .. data.identifier },
+            { title = "📤 Sender Identifier: " .. data.source_identifier },
+            { title = "👤 User Name: " .. data.name },
+            { title = "👮 Sender Name: " .. data.source_name },
+            { title = "📝 Reason: " .. data.reason },
+            { title = "💰 Amount: $" .. data.amount },
+            { title = "🏢 Job: " .. data.job_label },
+            { title = "📅 Created On: " .. data.date },
+            { title = "⏰ Due Date: " .. data.date_to_pay },
+            { title = "📌 Status: " .. string.upper(data.status) }
         }
     })
 
@@ -166,28 +136,25 @@ end
 function WhatToDo(data)
     lib.registerContext({
         id = 'WhatToDo',
-        title = "What to do with invoice",
+        title = "🛠️ Admin Billing Actions",
         canClose = true,
         options = {
             {
-                title = "Delete Invoice",
-                description = "Open paid invoices",
+                title = "🗑️ Delete Billing",
+                description = "Remove this billing record ❗",
                 progress = 100,
-                colorScheme = "green",
-                icon = 'star',
+                colorScheme = "red",
                 onSelect = function()
-                    TriggerServerEvent('wn_invoice:adminAction', data, "delete")
-                    wtd = "delete"
+                    TriggerServerEvent('wn_billing:adminAction', data, "delete")
                 end
             },
             {
-                title = "Mark as paid",
-                description =  "Open unpaid invoices",
+                title = "✅ Mark as Paid",
+                description = "Set billing status to PAID ✅",
                 progress = 100,
-                colorScheme = "red",
-                icon = 'star',
+                colorScheme = "green",
                 onSelect = function()
-                    TriggerServerEvent('wn_invoice:adminAction', data, "paid")
+                    TriggerServerEvent('wn_billing:adminAction', data, "paid")
                 end
             }
         }

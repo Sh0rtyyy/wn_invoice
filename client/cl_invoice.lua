@@ -1,132 +1,126 @@
-RegisterCommand(Config.InvoiceCommand, function()
+lib.locale()
+
+RegisterCommand(Config.billingCommand, function()
     local job = GetJob()
     local grade = GetJobGrade()
     print(job .. " " .. grade)
 
     local option = {
         {
-            title = "📄 Open your invoices",
-            description = "View and issue available invoices",
-            icon = 'invoice',
+            title = locale("view_your_billings_title"),
+            description = locale("view_your_billings_desc"),
             onSelect = function()
-                OpenPreInvoiceMenu()
+                OpenPrebillingMenu()
             end
         },
     }
 
-    if Config.UnemployedInvoices or (Config.JobInvoices[job] and Config.JobInvoices[job].data.job == job) then
-        local jobName = Config.JobInvoices[job].data.job
+    if Config.Unemployedbillings or (Config.Jobbillings[job] and Config.Jobbillings[job].data.job == job) then
+        local jobName = Config.Jobbillings[job].data.job
         print(jobName)
         option = {
             {
-                title = "📄 Open your invoices",
-                description = "View and issue available invoices",
-                icon = 'invoice',
+                title = locale("view_your_billings_title"),
+                description = locale("view_your_billings_desc"),
                 onSelect = function()
-                    OpenPreInvoiceMenu()
+                    OpenPrebillingMenu()
                 end
             },
             {
-                title = "🧾 Create invoice",
-                description = "Create invoice",
-                icon = 'alt',
+                title = locale("create_billing_title"),
+                description = locale("create_billing_desc"),
                 onSelect = function()
-                    OpenCreateInvoiceMenu()
+                    OpenCreatebillingMenu()
                 end
             },
         }
     end
 
-    -- Registering the invoice menu context
+    -- Registering the billing menu context
     lib.registerContext({
-        id = 'invoicemenu',
-        title = "Invoice Menu",
+        id = 'billingmenu',
+        title = locale("billing_menu_title"),
         canClose = true,
         options = option
     })
 
-    lib.showContext('invoicemenu')
+    lib.showContext('billingmenu')
 end)
 
 -- DB TABLUKA STRUCTURE
--- id = referencial ID of invoice, for command deletation
+-- id = referencial ID of billing, for command deletation
 -- identifier = user that needs to pay identifier
--- source_identifier = user that gave invoice
+-- source_identifier = user that gave billing
 -- name = user name that needs to pay identifier
--- source_name = user name that gave invoice
+-- source_name = user name that gave billing
 -- reason = why to pay
 -- amount = amount to pay
--- job = Job that gave the invoice
+-- job = Job that gave the billing
 -- job_aname = Job label
--- date = when was the invoice created
--- date_to_pay = when needs to be the invoice payed
+-- date = when was the billing created
+-- date_to_pay = when needs to be the billing payed
 -- paid_date = when was bill payed
 -- status = payed or notpayed
 
-function OpenPreInvoiceMenu()
-    print("Opening Pre Invoice Menu")
-    local invoices = lib.callback.await('wn_invoice:requestInvoices', false)
-    print(json.encode(invoices))
+function OpenPrebillingMenu()
+    print("Opening Pre billing Menu")
+    local billings = lib.callback.await('wn_billing:requestbillings', false)
+    print(json.encode(billings))
 
     lib.registerContext({
-        id = 'preinvoicemenu',
-        title = "Invoice Menu",
+        id = 'prebillingmenu',
+        title = locale("my_billings_title"),
+        menu = 'billingmenu',
         canClose = true,
         options = {
             {
-                title = "Open paid invoices",
-                description = "Open paid invoices",
+                title = locale("view_paid_title"),
+                description = locale("view_paid_desc"),
                 progress = 100,
                 colorScheme = "green",
-                icon = 'check',
                 onSelect = function()
-                    OpenInvoiceMenu(invoices, "paid")
+                    OpenbillingMenu(billings, "paid")
                 end
             },
             {
-                title = "Open unpaid invoices",
-                description =  "Open unpaid invoices",
+                title = locale("view_unpaid_title"),
+                description = locale("view_unpaid_desc"),
                 progress = 100,
                 colorScheme = "red",
-                --icon = 'exclamation',
-                icon = "hourglass-half",
                 onSelect = function()
-                    OpenInvoiceMenu(invoices, "unpaid")
+                    OpenbillingMenu(billings, "unpaid")
                 end
             }
         }
     })
 
-    lib.showContext('preinvoicemenu')
+    lib.showContext('prebillingmenu')
 end
 
-function OpenInvoiceMenu(data, invoice_status)
-    local invoices = data
-    local invoice_status = invoice_status
-    local status = "green"
-    local context_title = "Paid Invoices"
+function OpenbillingMenu(data, billing_status)
+    local billings = data
+    local statusColor = billing_status == "paid" and "green" or "red"
+    local context_title = billing_status == "paid" and locale("paid_title") or locale("unpaid_title")
     local options = {}
 
-    for _, data in ipairs(invoices) do
-        local invoice_title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Paid Date: " .. data.paid_date
-        print("invoice_status", invoice_status)
-        print("data.status", data.status)
-        if invoice_status == data.status then
-            print("Shown invoice ", invoice_status, data.status)
+    for _, data in ipairs(billings) do
+        if billing_status == data.status then
+            print("Shown billing ", billing_status, data.status)
+
+            local billing_title
             if data.status == "unpaid" then
-                status = "red"
-                context_title = "Unpaid Invoices"
-                invoice_title = "Invoice #" .. data.id .. " - " .. data.amount .. "$ | Due by: " .. data.date_to_pay
+                context_title = locale("unpaid_title_alt")
+                billing_title = locale("billing_unpaid_title", data.id, data.amount, data.date_to_pay)
+            else
+                billing_title = locale("billing_paid_title", data.id, data.amount, data.paid_date)
             end
+
             table.insert(options, {
-                title = invoice_title,
-                description = "See Details",
-                icon = 'file-invoice',
-                colorScheme = status,
+                title = billing_title,
+                description = locale("billing_details_desc"),
+                colorScheme = statusColor,
                 progress = 100,
                 onSelect = function()
-                    -- Optional: Handle selection, like showing full details or pay option
-                    print("Selected invoice ID: " .. data.id)
                     SeeDetails(data)
                 end
             })
@@ -135,58 +129,39 @@ function OpenInvoiceMenu(data, invoice_status)
 
     -- Register and show the context menu
     lib.registerContext({
-        id = 'invoices_menu',
+        id = 'billings_menu',
         title = context_title,
         canClose = true,
-        menu = 'preinvoicemenu',
-        onBack = function()
-            print('Went back!')
-        end,
+        menu = 'prebillingmenu',
         options = options
     })
 
-    lib.showContext('invoices_menu')
+    lib.showContext('billings_menu')
 end
 
 function SeeDetails(data)
     local options = {
-        {
-            title = "User Name: " .. data.name
-        },
-        {
-            title = "Sender Name: " .. data.source_name
-        },
-        {
-            title = "Reason: " .. data.reason
-        },
-        {
-            title = "Amount: " .. data.amount
-        },
-        {
-            title = "Job: " .. data.job_label
-        },
-        {
-            title = "Creation Date: " .. data.date
-        },
-        {
-            title = "Due Day: " .. data.date_to_pay
-        },
-        {
-            title = "Status: " .. string.upper(data.status)
-        }
+        { title = locale("billed_player", data.name) },
+        { title = locale("issued_by", data.source_name) },
+        { title = locale("billing_reason", data.reason) },
+        { title = locale("billing_amount", data.amount) },
+        { title = locale("billing_job", data.job_label) },
+        { title = locale("billing_created", data.date) },
+        { title = locale("billing_due", data.date_to_pay) },
+        { title = locale("billing_status", string.upper(data.status)) }
     }
 
-    -- Add "Pay Invoice" option only if status is NOT "paid"
+    -- Add "Pay billing" option only if status is NOT "paid"
     if string.lower(data.status) ~= "paid" then
         table.insert(options, {
-            title = "Pay Invoice",
+            title = locale("pay_now"),
             onSelect = function()
-                local payed = OpenInvoice(data, data.status)
-                if payed == nil then OpenPreInvoiceMenu() end
+                local payed = Openbilling(data, data.status)
+                if payed == nil then OpenPrebillingMenu() end
                 print("payed", payed)
                 if payed == "confirm" then
-                    print("Invoice payed", data.id)
-                    TriggerServerEvent('wn_invoice:invoicePayed', data.id)
+                    print("billing payed", data.id)
+                    TriggerServerEvent('wn_billing:billingPayed', data.id)
                 end
             end
         })
@@ -194,8 +169,8 @@ function SeeDetails(data)
 
     lib.registerContext({
         id = 'SeeDetails',
-        title = "Details for invoice #" .. data.id,
-        menu = 'invoices_menu',
+        title = locale("billing_details_title", data.id),
+        menu = 'billings_menu',
         canClose = true,
         options = options
     })
@@ -203,33 +178,31 @@ function SeeDetails(data)
     lib.showContext('SeeDetails')
 end
 
-function OpenInvoice(data, status)
-    local payed = false
-    local desc = "Invoice desc:  \n  " .. data.reason .. "  \n  " .. "  \n  Issued by: " .. data.source_name
-    if data.job ~= nil then
-        desc = "Invoice desc:  \n  " .. data.reason .. "  \n  " .. "  \n  Issued by: " .. data.job_label .. "  \n  " .. data.source_name
-    end
+function Openbilling(data, status)
+    local paid = false
+    local desc = locale("billing_dialog_desc",
+        data.reason,
+        (data.job ~= nil and (data.job_label .. " - ") or "") .. data.source_name
+    )
 
     if status == "paid" then
         lib.alertDialog({
-            header = "Invoice #" .. data.id .. " - $" .. data.amount,
+            header = locale("billing_dialog_title", data.id, data.amount),
             content = desc,
             centered = true,
             cancel = false
         })
     else
-        payed = lib.alertDialog({
-            header = "Invoice #" .. data.id .. " - $" .. data.amount,
+        paid = lib.alertDialog({
+             header = locale("billing_dialog_title", data.id, data.amount),
             content = desc,
             centered = true,
             labels = {
-                confirm = "Pay"
+                confirm = locale("billing_dialog_pay")
             },
             cancel = true
         })
-        print("payed", payed)
     end
 
-    print("payed 2", payed)
-    return payed
+    return paid
 end

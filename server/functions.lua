@@ -269,6 +269,26 @@ function AddMoney(type, count, source)
     end
 end
 
+function AddMoneyIdentifier(type, count, identifier)
+    local ident = identifier
+    local moneyType = type
+    local moneyAmount = count
+
+    if Config.Framework == "ESX" then
+        ident.addAccountMoney(moneyType, tonumber(moneyAmount))
+    elseif Config.Framework == "qbcore" then
+        if moneyType == "money" then
+            moneyType = "cash"
+        end
+        ident.Functions.AddMoney(moneyType, moneyAmount)
+    elseif Config.Framework == "qbox" then
+        if moneyType == "money" then
+            moneyType = "cash"
+        end
+        exports.qbx_core:AddMoney(ident, moneyType, moneyAmount)
+    end
+end
+
 function RemoveMoney(type, count, source)
     local src = source
     local moneyType = type
@@ -337,18 +357,22 @@ function KickCheater(src, message)
     DropPlayer(src, message)
 end
 
-function DiscordLog(name,message,color)
+function DiscordLog(title, message)
     local embeds = {
         {
-            ["title"] = name,
+            ["title"] = title,
             ["description"] = message,
             ["type"] = "rich",
             ["color"] = 56108,
             ["footer"] = {
-                ["text"] = "wn_atmrobbery " .. os.date('%H:%M - %d. %m. %Y', os.time()),
+                ["text"] = "wn_billing • " .. os.date('%H:%M - %d.%m.%Y'),
             },
         }
     }
 
-    PerformHttpRequest(webhook, function(err, text, headers) end, 'POST', json.encode({ username = name, embeds = embeds }), { ['Content-Type'] = 'application/json' })
+    PerformHttpRequest(webhook, function(err, text, headers)
+        if err ~= 204 then
+            print("Discord webhook error: " .. tostring(err))
+        end
+    end, 'POST', json.encode({ username = title, embeds = embeds }), { ['Content-Type'] = 'application/json' })
 end

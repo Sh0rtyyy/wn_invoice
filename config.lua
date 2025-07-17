@@ -7,23 +7,23 @@ Config.PoliceJobs =  {"police", "sheriff"} -- Name of the job for script
 Config.Notify = "ox_lib" -- ox_lib, qbcore or ESX
 Config.SearchDuration = 6000 -- How long will the player search the pleace.
 
-Config.InvoiceCommand = "invoice"
-Config.InvoiceKeyBind = "F5" -- or false3
-Config.CreateInvoiceCommand = "createinvoice"
-Config.UnemployedInvoices = false
+Config.billingCommand = "billing"
+Config.billingKeyBind = "F5" -- or false3
+Config.CreatebillingCommand = "createbilling"
+Config.Unemployedbillings = false
 
-Config.AdminCommand = "invoiceadmin"
+Config.AdminCommand = "billingadmin"
 Config.AdminCommandAccess = {"admin"}
 
 Config.DateFormat = '%Y-%m-%d'
 
-Config.JobInvoices = {
+Config.Jobbillings = {
     police = {
         data = {
             job = "police",
             commission = 10
         },
-        invoices = {
+        billings = {
             {"Big speed", 500},
             {"Theft", 500},
             {"Red Light", 500}
@@ -34,7 +34,7 @@ Config.JobInvoices = {
             job = "sheriff",
             commission = 20
         },
-        invoices = {
+        billings = {
             {"Big speed", 500},
             {"Theft", 500},
             {"Red Light", 500}
@@ -45,6 +45,6 @@ Config.JobInvoices = {
             job = "mechanic",
             commission = 0,
         },
-        invoices = false
+        billings = false
     },
 }

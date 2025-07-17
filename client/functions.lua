@@ -46,8 +46,8 @@ elseif Config.Framework == "qbox" then
 
 end
 
-RegisterNetEvent('wn_invoice:sendNotify')
-AddEventHandler('wn_invoice:sendNotify', function(type, title, text, icon, time)
+RegisterNetEvent('wn_billing:sendNotify')
+AddEventHandler('wn_billing:sendNotify', function(type, title, text, icon, time)
     Notify(type, title, text, icon, time)
 end)
 
