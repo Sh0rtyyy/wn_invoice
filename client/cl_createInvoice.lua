@@ -67,7 +67,9 @@ function OpenCreatebillingMenu()
             title = locale("select_player_title", data.player and (" ✅ [" .. data.player .. "]") or ""),
             description = locale("select_player_desc"),
             onSelect = function()
-                data.player = "1" -- Replace with actual player selector
+                local player = SelectPlayer('createbilling')
+                --print("player", player)
+                data.player = player
                 RefreshbillingMenu()
                 lib.showContext('createbilling')
             end
@@ -123,9 +125,9 @@ function OpenCreatebillingMenu()
             description = locale("send_billing_desc"),
             onSelect = function()
                 if not data.player or not data.reason or not data.amount or not data.job or not data.date_to_pay then
-                    print("Please fill all fields before sending the billing.")
+                    --print("Please fill all fields before sending the billing.")
                 else
-                    print("Sending billing:", json.encode(data))
+                    --print("Sending billing:", json.encode(data))
                     TriggerServerEvent('wn_billing:createbilling', data)
                 end
             end

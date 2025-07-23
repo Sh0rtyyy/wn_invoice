@@ -6,11 +6,11 @@ RegisterCommand(Config.AdminCommand, function(source, args, rawCommand)
     local billing = GetbillingAdmin(argumnt)
     local group = GetPlayerGroup(src)
 
-    print(group)
-    print(json.encode(billing))
+    --print(group)
+    --print(json.encode(billing))
     for i, v in ipairs(Config.AdminCommandAccess) do
         if group ~= v then return end
-        print(group)
+        --print(group)
         TriggerClientEvent('wn_billing:showPlayersbillings', src, billing, args[1])
     end
 end)
@@ -34,7 +34,7 @@ RegisterNetEvent('wn_billing:adminAction', function(data, action)
         MySQL.Async.execute("DELETE FROM `wn_billing` WHERE `id` = @id", {
             ['@id'] = billing_id
         }, function(affectedRows)
-            print("billing deleted, rows affected: ", affectedRows)
+            --print("billing deleted, rows affected: ", affectedRows)
         end)
 
         DiscordLog("🧾 Billing Deleted by Admin", (
@@ -55,7 +55,7 @@ RegisterNetEvent('wn_billing:adminAction', function(data, action)
             ['@id'] = billing_id,
             ['@paid_date'] = currentDate
         }, function(affectedRows)
-            print("billing marked as paid, rows affected: ", affectedRows)
+            --print("billing marked as paid, rows affected: ", affectedRows)
             DiscordLog("🧾 Billing Paid by Admin", (
                 "📌 Billing ID: **%s**\n" ..
                 "🧑‍💼 Admin: **%s**\n"
@@ -72,7 +72,7 @@ end)
 
 function GetbillingAdmin(source)
     local src = source
-    print("src", src)
+    --print("src", src)
     local playerIdentifier = GetIdentifier(src)
     local billingData = {}
     local isFetched = false

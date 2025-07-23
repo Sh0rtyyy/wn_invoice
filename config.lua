@@ -3,14 +3,11 @@ Config = {}
 Config.Locale = 'en'
 Config.Framework = "ESX" -- ESX or qbcore
 Config.EnableDebug = true -- Enable/Disable prints and showing box of ox_target
-Config.PoliceJobs =  {"police", "sheriff"} -- Name of the job for script
 Config.Notify = "ox_lib" -- ox_lib, qbcore or ESX
-Config.SearchDuration = 6000 -- How long will the player search the pleace.
 
 Config.billingCommand = "billing"
-Config.billingKeyBind = "F5" -- or false3
 Config.CreatebillingCommand = "createbilling"
-Config.Unemployedbillings = false
+Config.Unemployedbillings = true
 
 Config.AdminCommand = "billingadmin"
 Config.AdminCommandAccess = {"admin"}
@@ -21,6 +18,7 @@ Config.Jobbillings = {
     police = {
         data = {
             job = "police",
+            viewAccess = {"boss", "underboss"},
             commission = 10
         },
         billings = {
@@ -32,6 +30,7 @@ Config.Jobbillings = {
     sheriff = {
         data = {
             job = "sheriff",
+            viewAccess = {"all"},
             commission = 20
         },
         billings = {
@@ -43,6 +42,7 @@ Config.Jobbillings = {
     mechanic = {
         data = {
             job = "mechanic",
+            viewAccess = false,
             commission = 0,
         },
         billings = false

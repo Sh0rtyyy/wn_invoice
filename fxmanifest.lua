@@ -2,7 +2,7 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'mrshortyno'
-description 'A methlab script for ESX and QB-Core'
+description 'Advanced billing system for ESX, QBCORE and QBOX'
 version '1.0.0'
 lua54 'yes'
 

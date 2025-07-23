@@ -6,6 +6,13 @@
   "view_paid_desc": "Check all paid invoices 💸",
   "view_unpaid_title": "⏳ View Unpaid Billings",
   "view_unpaid_desc": "See pending invoices and dues 📄",
+  "view_created_title": "🧾 View Created Billings",
+  "view_created_desc": "View all invoices you have issued 📄",
+  "view_company_title": "🏢 View Company Billings",
+  "view_company_desc": "View all invoices issued by your company 📄",
+
+  "created_title": "🧾 Created Billings",
+  "company_title": "🏢 Company Billings",
 
   "paid_title": "✅ Paid Billings",
   "unpaid_title": "❌ Unpaid Billings",

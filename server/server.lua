@@ -1,28 +1,90 @@
 lib.locale()
 
-lib.callback.register('wn_billing:requestbillings', function(source, request_src)
-    print("requestbillings")
-    print("request_src", request_src)
-    local src = source
-    if request_src ~= nil then
-        src = request_src
-    end
-    print("src", src)
-    local playerIdentifier = GetIdentifier(src)
+lib.callback.register('wn_billing:requestbillings', function(source, request_src, type)
     local billingData = {}
     local isFetched = false
 
-    MySQL.Async.fetchAll('SELECT * FROM wn_billing WHERE identifier = @identifier', {
-        ['@identifier'] = playerIdentifier
-    }, function(result)
-        if result then
-            billingData = result
+    if type == "personal" or type == nil then
+        local src = source
+        if request_src ~= nil then
+            src = request_src
         end
-        isFetched = true
-    end)
+        local playerIdentifier = GetIdentifier(src)
 
-    while not isFetched do
-        Wait(10)
+        MySQL.Async.fetchAll('SELECT * FROM wn_billing WHERE identifier = @identifier', {
+            ['@identifier'] = playerIdentifier
+        }, function(result)
+            if result then
+                billingData = result
+            end
+            isFetched = true
+        end)
+
+        while not isFetched do
+            Wait(10)
+        end
+    elseif type == "company" then
+        local src = source
+        local playerJob = GetJob(src)
+        local jobGrade = GetJobGrade(src)
+
+        local jobConfig = Config.Jobbillings[playerJob]
+
+        if jobConfig and jobConfig.data then
+            local viewAccess = jobConfig.data.viewAccess
+
+            local hasAccess = false
+
+            if viewAccess == false then
+                hasAccess = false
+            else
+                for _, grade in pairs(viewAccess) do
+                    if grade == "all" or grade == jobGrade then
+                        hasAccess = true
+                        break
+                    end
+                end
+            end
+
+            if hasAccess then
+                MySQL.Async.fetchAll('SELECT * FROM wn_billing WHERE job = @job', {
+                    ['@job'] = playerJob
+                }, function(result)
+                    if result then
+                        billingData = result
+                    end
+                    isFetched = true
+                end)
+            else
+                print(("Player with job '%s' and grade '%s' tried to access company billing without permission."):format(playerJob, jobGrade))
+                isFetched = true
+            end
+        else
+            isFetched = true
+        end
+
+        while not isFetched do
+            Wait(10)
+        end
+    elseif type == "created" then 
+        local src = source
+        if request_src ~= nil then
+            src = request_src
+        end
+        local playerIdentifier = GetIdentifier(src)
+
+        MySQL.Async.fetchAll('SELECT * FROM wn_billing WHERE source_identifier = @identifier', {
+            ['@identifier'] = playerIdentifier
+        }, function(result)
+            if result then
+                billingData = result
+            end
+            isFetched = true
+        end)
+
+        while not isFetched do
+            Wait(10)
+        end
     end
 
     return billingData
@@ -68,11 +130,6 @@ RegisterNetEvent('wn_billing:billingPayed', function(id)
     local src = source
     local playerIdentifier = GetIdentifier(src)
     local billing_id = id
-
-    print("id", id)
-    print("playerIdentifier", playerIdentifier)
-    print("billing_id", billing_id)
-
     local billingData = nil
     local isFetched = false
 
@@ -90,10 +147,7 @@ RegisterNetEvent('wn_billing:billingPayed', function(id)
         Wait(10)
     end
 
-    print(billingData)
     local user_money = GetMoney("bank", billingData.amount, src)
-    print("user_money", user_money)
-    print("billingData.amount", billingData.amount)
     if not user_money then
             TriggerClientEvent("wn_billing:sendNotify", src, "error", locale("billing"), locale("not_enough_money"))
         return
@@ -114,7 +168,6 @@ RegisterNetEvent('wn_billing:billingPayed', function(id)
                 if billingData.job == "Personal" then
                     local identifier = billingData.source_identifier
                     local sender_source = GetPlayerFromIdentifier(identifier)
-                    print("sender_source", sender_source)
                     AddMoneyIdentifier("bank", billingData.amount, sender_source)
                 else
                     local commission = Config.Jobbillings[billingData.job].data.commission
@@ -124,12 +177,9 @@ RegisterNetEvent('wn_billing:billingPayed', function(id)
                     local sender_source = GetPlayerFromIdentifier(identifier)
                     authorReceive = receive * (commission / 100)
                     receive = authorReceive
-                    print("receive", receive)
-                    print("sender_source", sender_source)
                     AddMoneyIdentifier("bank", receive, sender_source)
                     AddSocietyMoney(billingData.job, billingData.amount)
                 end
-                print('billing ' .. billing_id .. ' for player ' .. playerIdentifier .. ' marked as paid.')
                 DiscordLog("🧾 Billing Paid", (
                     "📌 Billing ID: **%s**\n" ..
                     "👤 Sender Identifier: **%s**\n" ..
@@ -223,47 +273,47 @@ RegisterNetEvent('wn_billing:createbilling', function(data)
     local billing_data = data
     print("Creating billing from source ", src)
 
-    -- Printing the incoming data
-    print("data", billing_data)
-    print("data2", json.encode(billing_data))
+    -- --printing the incoming data
+    --print("data", billing_data)
+    --print("data2", json.encode(billing_data))
 
     -- Convert timestamp to formatted date
     local date_to_pay = billing_data.date_to_pay
-    print("date_to_pay:", date_to_pay)
+    --print("date_to_pay:", date_to_pay)
 
     -- Prepare the data to be inserted into the database
     local identifier = GetIdentifier(data.player)
-    print("Player Identifier:", identifier)
+    --print("Player Identifier:", identifier)
     
     local source_identifier = GetIdentifier(src)
-    print("Source Identifier:", source_identifier)
+    --print("Source Identifier:", source_identifier)
     
     local name = GetName(data.player)
-    print("Player Name:", name)
+    --print("Player Name:", name)
     
     local source_name = GetName(src)
-    print("Source Name:", source_name)
+    --print("Source Name:", source_name)
 
     local reason = billing_data.reason or 'No reason provided'
-    print("Reason:", reason)
+    --print("Reason:", reason)
 
     local amount = billing_data.amount or 0
-    print("Amount:", amount)
+    --print("Amount:", amount)
 
     local job = billing_data.job or 'Personal'
-    print("Job:", job)
+    --print("Job:", job)
 
     local jobLabel = billing_data.job_label or 'Personal'
-    print("jobLabel:", jobLabel)
+    --print("jobLabel:", jobLabel)
 
     local date = date_to_pay -- Use the formatted date for the billing creation date
-    print("Date (date_to_pay):", date)
+    --print("Date (date_to_pay):", date)
 
     local paid_date = billing_data.paid_date or ''
-    print("Payed Date:", paid_date)
+    --print("Payed Date:", paid_date)
 
     local status = billing_data.status or 'unpaid'
-    print("Status:", status)
+    --print("Status:", status)
 
     -- MySQL query to insert the billing into the database
     local query = [[ 
@@ -289,10 +339,10 @@ RegisterNetEvent('wn_billing:createbilling', function(data)
 
     MySQL.insert(query, values, function(insertId)
         if insertId and insertId > 0 then
-            print("billing created with ID:", insertId)
+            --print("billing created with ID:", insertId)
 
             TriggerClientEvent("wn_billing:sendNotify", src, "success", locale("Billing"), locale("billing_created_success_sender", insertId))
-            TriggerClientEvent("wn_billing:sendNotify", data.player, "info", locale("Billing"), locale("billing_created_success_receiver"))
+            TriggerClientEvent("wn_billing:sendNotify", data.player, "inform", locale("Billing"), locale("billing_created_success_receiver"))
 
             DiscordLog("🧾 Billing Created", (
                 "📌 Billing ID: **%s**\n" ..
@@ -327,49 +377,49 @@ end)
 exports('createbilling', function(src, data)
     local src = source
     local billing_data = data
-    print("Creating billing from source ", src)
+    --print("Creating billing from source ", src)
 
-    -- Printing the incoming data
-    print("data", billing_data)
-    print("data2", json.encode(billing_data))
+    -- --printing the incoming data
+    --print("data", billing_data)
+    --print("data2", json.encode(billing_data))
 
     -- Convert timestamp to formatted date
     local date_to_pay = billing_data.date_to_pay
-    print("date_to_pay:", date_to_pay)
+    --print("date_to_pay:", date_to_pay)
 
     -- Prepare the data to be inserted into the database
     local identifier = GetIdentifier(data.player)
-    print("Player Identifier:", identifier)
+    --print("Player Identifier:", identifier)
     
     local source_identifier = GetIdentifier(src)
-    print("Source Identifier:", source_identifier)
+    --print("Source Identifier:", source_identifier)
     
     local name = GetName(data.player)
-    print("Player Name:", name)
+    --print("Player Name:", name)
     
     local source_name = GetName(src)
-    print("Source Name:", source_name)
+    --print("Source Name:", source_name)
 
     local reason = billing_data.reason or 'No reason provided'
-    print("Reason:", reason)
+    --print("Reason:", reason)
 
     local amount = billing_data.amount or 0
-    print("Amount:", amount)
+    --print("Amount:", amount)
 
     local job = billing_data.job or 'Personal'
-    print("Job:", job)
+    --print("Job:", job)
 
     local jobLabel = billing_data.job_label or 'Personal'
-    print("jobLabel:", jobLabel)
+    --print("jobLabel:", jobLabel)
 
     local date = date_to_pay -- Use the formatted date for the billing creation date
-    print("Date (date_to_pay):", date)
+    --print("Date (date_to_pay):", date)
 
     local paid_date = billing_data.paid_date or ''
-    print("Payed Date:", paid_date)
+    --print("Payed Date:", paid_date)
 
     local status = billing_data.status or 'unpaid'
-    print("Status:", status)
+    --print("Status:", status)
 
     -- MySQL query to insert the billing into the database
     local query = [[ 
@@ -395,7 +445,7 @@ exports('createbilling', function(src, data)
 
     MySQL.insert(query, values, function(insertId)
         if insertId and insertId > 0 then
-            print("billing created with ID:", insertId)
+            --print("billing created with ID:", insertId)
 
             TriggerClientEvent("success", src, "Billing", "You successfully created billing #" .. insertId)
             TriggerClientEvent("success", data.player, "Billing", "You've received an billing")

@@ -23,8 +23,8 @@ end)
 function OpenPrebillingMenuAdmin(data, player)
     local billings = data
     local id = player
-    print("Opening Pre billing Menu Admin for player " .. id)
-    print(json.encode(billings))
+    --print("Opening Pre billing Menu Admin for player " .. id)
+    --print(json.encode(billings))
 
     lib.registerContext({
         id = 'prebillingmenuadmin',
@@ -81,7 +81,7 @@ function OpenbillingMenuAdmin(data, billing_status)
         canClose = true,
         menu = 'prebillingmenuadmin',
         onBack = function()
-            print('Went back!')
+            --print('Went back!')
         end,
         options = options
     })

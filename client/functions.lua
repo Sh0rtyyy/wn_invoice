@@ -186,9 +186,11 @@ function SelectPlayer(returnmenu)
         title = title,
         position = 'top-right',
         onSideScroll = function(selected, scrollIndex, args)
+            --print("onSideScroll", closePlayers[1].args.id)
             currentlyHoveredPlayer = args.id
         end,
         onSelected = function(selected, scrollIndex, args)
+            --print("onSelected", closePlayers[1].args.id)
             currentlyHoveredPlayer = args.id
         end,
         onClose = function()
@@ -213,7 +215,8 @@ function SelectPlayer(returnmenu)
     if returnmenu ~= nil then
         lib.showContext(returnmenu)
     end
-    return choosenPlayer
+    local returnId = GetPlayerServerId(choosenPlayer)
+    return returnId
 end
 
 function giveInput(dialog_name, title, rownames, default, type, returnmenu)
@@ -222,7 +225,7 @@ function giveInput(dialog_name, title, rownames, default, type, returnmenu)
     })
  
     if not input then return end
-    print(json.encode(input[1]))
+    --print(json.encode(input[1]))
     if returnmenu ~= nil then
         lib.showContext(returnmenu)
     end
@@ -231,8 +234,8 @@ end
 
 function table.contains(table, value)
     for _, v in ipairs(table) do
-        print("v", v)
-        print("value", value)
+        --print("v", v)
+        --print("value", value)
         if v == value then
             return true
         end

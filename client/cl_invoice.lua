@@ -3,7 +3,6 @@ lib.locale()
 RegisterCommand(Config.billingCommand, function()
     local job = GetJob()
     local grade = GetJobGrade()
-    print(job .. " " .. grade)
 
     local option = {
         {
@@ -13,11 +12,17 @@ RegisterCommand(Config.billingCommand, function()
                 OpenPrebillingMenu()
             end
         },
+        {
+            title = locale("view_created_title"),
+            description = locale("view_created_desc"),
+            onSelect = function()
+                OpenCreateedbillingMenu()
+            end
+        },
     }
 
     if Config.Unemployedbillings or (Config.Jobbillings[job] and Config.Jobbillings[job].data.job == job) then
-        local jobName = Config.Jobbillings[job].data.job
-        print(jobName)
+
         option = {
             {
                 title = locale("view_your_billings_title"),
@@ -31,6 +36,20 @@ RegisterCommand(Config.billingCommand, function()
                 description = locale("create_billing_desc"),
                 onSelect = function()
                     OpenCreatebillingMenu()
+                end
+            },
+            {
+                title = locale("view_created_title"),
+                description = locale("view_created_desc"),
+                onSelect = function()
+                    OpenCreateedbillingMenu()
+                end
+            },
+            {
+                title = locale("view_company_title"),
+                description = locale("view_company_desc"),
+                onSelect = function()
+                    OpenCompanybillingMenu()
                 end
             },
         }
@@ -63,9 +82,9 @@ end)
 -- status = payed or notpayed
 
 function OpenPrebillingMenu()
-    print("Opening Pre billing Menu")
+    --print("Opening Pre billing Menu")
     local billings = lib.callback.await('wn_billing:requestbillings', false)
-    print(json.encode(billings))
+    --print(json.encode(billings))
 
     lib.registerContext({
         id = 'prebillingmenu',
@@ -105,11 +124,10 @@ function OpenbillingMenu(data, billing_status)
 
     for _, data in ipairs(billings) do
         if billing_status == data.status then
-            print("Shown billing ", billing_status, data.status)
+            --print("Shown billing ", billing_status, data.status)
 
             local billing_title
             if data.status == "unpaid" then
-                context_title = locale("unpaid_title_alt")
                 billing_title = locale("billing_unpaid_title", data.id, data.amount, data.date_to_pay)
             else
                 billing_title = locale("billing_paid_title", data.id, data.amount, data.paid_date)
@@ -121,7 +139,7 @@ function OpenbillingMenu(data, billing_status)
                 colorScheme = statusColor,
                 progress = 100,
                 onSelect = function()
-                    SeeDetails(data)
+                    SeeDetails(data, 'billings_menu')
                 end
             })
         end
@@ -139,7 +157,8 @@ function OpenbillingMenu(data, billing_status)
     lib.showContext('billings_menu')
 end
 
-function SeeDetails(data)
+function SeeDetails(data, returnmenu)
+    local return_menu = returnmenu
     local options = {
         { title = locale("billed_player", data.name) },
         { title = locale("issued_by", data.source_name) },
@@ -158,9 +177,9 @@ function SeeDetails(data)
             onSelect = function()
                 local payed = Openbilling(data, data.status)
                 if payed == nil then OpenPrebillingMenu() end
-                print("payed", payed)
+                --print("payed", payed)
                 if payed == "confirm" then
-                    print("billing payed", data.id)
+                    --print("billing payed", data.id)
                     TriggerServerEvent('wn_billing:billingPayed', data.id)
                 end
             end
@@ -170,7 +189,7 @@ function SeeDetails(data)
     lib.registerContext({
         id = 'SeeDetails',
         title = locale("billing_details_title", data.id),
-        menu = 'billings_menu',
+        menu = return_menu,
         canClose = true,
         options = options
     })
@@ -205,4 +224,90 @@ function Openbilling(data, status)
     end
 
     return paid
+end
+
+-------------- CREATED BILINGS --------------
+
+function OpenCreateedbillingMenu()
+    local billings = lib.callback.await('wn_billing:requestbillings', false, nil, "created")
+    local statusColor = billing_status == "paid" and "green" or "red"
+    local context_title = billing_status == "paid" and locale("paid_title") or locale("unpaid_title")
+    local options = {}
+
+    --print(json.encode(billings))
+
+    for _, data in ipairs(billings) do
+        local billing_title
+        local statusColor = data.status == "paid" and "green" or "red"
+
+        if data.status == "unpaid" then
+            billing_title = locale("billing_unpaid_title", data.id, data.amount, data.date_to_pay)
+        else
+            billing_title = locale("billing_paid_title", data.id, data.amount, data.paid_date)
+        end
+
+        table.insert(options, {
+            title = billing_title,
+            description = locale("billing_details_desc"),
+            colorScheme = statusColor,
+            progress = 100,
+            onSelect = function()
+                SeeDetails(data, "created_billings_menu")
+            end
+        })
+    end
+
+    -- Register and show the context menu
+    lib.registerContext({
+        id = 'created_billings_menu',
+        title = locale("created_title"),
+        canClose = true,
+        menu = 'billingmenu',
+        options = options
+    })
+
+    lib.showContext('created_billings_menu')
+end
+
+-------------- COMPANY BILINGS --------------
+
+function OpenCompanybillingMenu()
+    local billings = lib.callback.await('wn_billing:requestbillings', false, nil, "company")
+    local statusColor = billing_status == "paid" and "green" or "red"
+    local context_title = billing_status == "paid" and locale("paid_title") or locale("unpaid_title")
+    local options = {}
+
+    --print(json.encode(billings))
+
+    for _, data in ipairs(billings) do
+        local billing_title
+        local statusColor = data.status == "paid" and "green" or "red"
+
+        if data.status == "unpaid" then
+            billing_title = locale("billing_unpaid_title", data.id, data.amount, data.date_to_pay)
+        else
+            billing_title = locale("billing_paid_title", data.id, data.amount, data.paid_date)
+        end
+
+        table.insert(options, {
+            title = billing_title,
+            description = locale("billing_details_desc"),
+            colorScheme = statusColor,
+            progress = 100,
+            onSelect = function()
+                SeeDetails(data, "created_billings_menu")
+            end
+        })
+    end
+
+    -- Register and show the context menu
+    lib.registerContext({
+        id = 'created_billings_menu',
+        title = locale("company_title"),
+        canClose = true,
+        menu = 'billingmenu',
+        options = options
+    })
+
+    lib.showContext('created_billings_menu')
 end

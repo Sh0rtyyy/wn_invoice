@@ -1,4 +1,4 @@
-local webhook = "https://discord.com/api/webhooks/1250184705182007419/aoG7RN98Z52JYIVZ5jI2DyQO_2Upv1GqisucTEC2v52A-1Gp-8zlWzUJiXqRuXTag1T7"
+local webhook = "https://discord.com/api/webhooks/"
 
 if Config.Framework == "ESX" then
     ESX = exports["es_extended"]:getSharedObject()
@@ -37,11 +37,40 @@ function CheckJob(source, job)
     end
 end
 
+function GetJob(source)
+    local src = source
+
+    if Config.Framework == "ESX" then
+        local xPlayer = ESX.GetPlayerFromId(src)
+        print("Job", xPlayer.getJob().name)
+        return xPlayer.getJob().name
+    elseif Config.Framework == "qbcore" then
+        local xPlayer = QBCore.Functions.GetPlayerData()
+        return xPlayer.job.name
+    elseif Config.Framework == "qbox" then
+        local xPlayer = exports.qbx_core:GetPlayer(src)
+        return xPlayer.PlayerData.job.name
+    end
+end
+
+function GetJobGrade(source)
+    local src = source
+
+    if Config.Framework == "ESX" then
+        local xPlayer = ESX.GetPlayerFromId(src)
+        return xPlayer.getJob().grade_name
+    elseif Config.Framework == "qbcore" then
+        local xPlayer = QBCore.Functions.GetPlayerData()
+        return xPlayer.job.grade_name
+    elseif Config.Framework == "qbox" then
+        local xPlayer = exports.qbx_core:GetPlayer(src)
+        return xPlayer.PlayerData.job.grade_name
+    end
+end
+
 function GetIdentifier(source)
     local src = source
-    print(src)
-
-    -- TODO: Zkontrolovať
+    
     if Config.Framework == "ESX" then
         local xPlayer = ESX.GetPlayerFromId(src)
         return xPlayer.getIdentifier(src)
@@ -56,8 +85,7 @@ end
 
 function GetName(source)
     local src = source
-
-    -- TODO: Zkontrolovať
+    
     if Config.Framework == "ESX" then
         local xPlayer = ESX.GetPlayerFromId(src)
         return xPlayer.getName()
